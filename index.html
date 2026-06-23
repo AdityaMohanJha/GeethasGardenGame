@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cognitive Assessment | Geetha's Garden</title>
+  <link rel="stylesheet" href="css/style.css">
+  <meta name="description" content="A gamified dementia screening and cognitive assessment platform.">
+</head>
+
+<body>
+
+  <!-- Darker off-white background -->
+  <div class="login-page-bg">
+  </div>
+
+  <!-- Animated floating garden emojis -->
+  <div id="floatEmojis"></div>
+
+  <main class="login-split">
+
+    <!-- Left Panel -->
+    <div class="login-left">
+      <div class="logo-group mb-3">
+        <span class="logo-icon">🏡</span>
+        <span class="logo-text" style="font-size:2rem;">Geetha's Garden</span>
+      </div>
+      <h1 class="login-tagline">A gentle space for your mind.</h1>
+      <p class="login-desc">
+        Welcome to Geetha's Garden — a calm, warm, and gamified
+        journey to help you exercise your memory, coordination, and
+        thinking skills.
+      </p>
+    </div>
+
+    <!-- Right Panel: Login card -->
+    <div class="card" id="loginCard">
+
+      <!-- Patient / Doctor toggle -->
+      <div class="login-toggle-group">
+        <button id="togglePatient" class="login-toggle-btn active" onclick="setRole('patient')">Patient</button>
+        <button id="toggleDoctor" class="login-toggle-btn" onclick="setRole('doctor')">Doctor</button>
+      </div>
+
+      <h2 id="formTitle" class="mb-3">Patient Login</h2>
+
+      <form id="authForm" onsubmit="handleAuthSubmit(event)" autocomplete="off">
+
+        <!-- Full Name (Register only) -->
+        <div class="form-group d-none" id="nameFieldGroup">
+          <div class="input-icon-wrap">
+            <span class="input-icon">👤</span>
+            <input type="text" id="regName" class="form-input" placeholder="Full Name" autocomplete="off">
+          </div>
+        </div>
+
+        <!-- Age (Register only) -->
+        <div class="form-group d-none" id="ageFieldGroup">
+          <div class="input-icon-wrap">
+            <span class="input-icon">🔢</span>
+            <input type="number" id="regAge" class="form-input" placeholder="Age" autocomplete="off" min="1" max="120">
+          </div>
+        </div>
+
+        <!-- Gender (Register only) -->
+        <div class="form-group d-none" id="genderFieldGroup">
+          <div class="input-icon-wrap">
+            <span class="input-icon">👤</span>
+            <input type="text" id="regGender" class="form-input" placeholder="Gender" autocomplete="off">
+          </div>
+        </div>
+
+        <!-- Contact (Register only) -->
+        <div class="form-group d-none" id="contactFieldGroup">
+          <div class="input-icon-wrap">
+            <span class="input-icon">📞</span>
+            <input type="text" id="regContact" class="form-input" placeholder="Contact" autocomplete="off">
+          </div>
+        </div>
+
+        <!-- Education Level (Patient Register only) -->
+        <div class="form-group d-none" id="educationFieldGroup">
+          <div class="input-icon-wrap">
+            <span class="input-icon">🎓</span>
+            <select id="regEducation" class="form-select">
+              <option value="">Education Level</option>
+              <option value="none">No formal education</option>
+              <option value="primary">Primary education</option>
+              <option value="secondary">Secondary education</option>
+              <option value="higher_secondary">Higher secondary</option>
+              <option value="undergraduate">Undergraduate</option>
+              <option value="postgraduate">Postgraduate</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Technological Familiarity (Patient Register only) -->
+        <div class="form-group d-none" id="techFieldGroup">
+          <div class="input-icon-wrap">
+            <span class="input-icon">💻</span>
+            <select id="regTech" class="form-select">
+              <option value="">Technological Familiarity</option>
+              <option value="none">No familiarity</option>
+              <option value="low">Low familiarity</option>
+              <option value="medium">Moderate familiarity</option>
+              <option value="high">High familiarity</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Username -->
+        <div class="form-group">
+          <div class="input-icon-wrap">
+            <span class="input-icon">👤</span>
+            <input type="text" id="authUsername" class="form-input" placeholder="Username" required autocomplete="off">
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <div class="input-icon-wrap">
+            <span class="input-icon">🔒</span>
+            <input type="password" id="authPassword" class="form-input" placeholder="Password" required
+              autocomplete="new-password">
+            <button type="button" class="show-pw-btn" id="showPwBtn" onclick="togglePassword()">Show</button>
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" id="submitBtn" class="btn btn-green mb-3" style="width:100%;">Log In</button>
+
+        <!-- Toggle login/register -->
+        <div class="text-center">
+          <p id="toggleActionText" style="font-size:.9rem;margin:0;">
+            Don't have an account?
+            <a href="#" onclick="toggleMode(event)"
+              style="font-weight:800;color:var(--color-pink);text-decoration:underline;">Register here</a>
+          </p>
+        </div>
+      </form>
+
+      <!-- Consent Form (Initially hidden) -->
+      <div id="consentSection" class="d-none">
+        <h2 class="mb-3">Patient Consent</h2>
+        <div class="info-box mb-3" style="font-size:0.95rem; line-height:1.5;">
+          <p style="margin-bottom:0.5rem;"><strong>Geetha's Garden Consent Agreement</strong></p>
+          <p style="margin:0;">Please review and check the following options to proceed with your registration.</p>
+        </div>
+        <form id="consentForm" onsubmit="handleConsentSubmit(event)">
+          <div class="form-group" style="display:flex; gap:0.75rem; align-items:flex-start;">
+            <input type="checkbox" id="consent1" required
+              style="width:20px; height:20px; margin-top:2px; cursor:pointer;">
+            <label for="consent1"
+              style="font-size:0.95rem; line-height:1.4; cursor:pointer; font-weight: normal; text-transform: none; text-align: left;">I
+              consent to the collection of my cognitive assessment data for screening purposes.</label>
+          </div>
+          <div class="form-group" style="display:flex; gap:0.75rem; align-items:flex-start;">
+            <input type="checkbox" id="consent2" required
+              style="width:20px; height:20px; margin-top:2px; cursor:pointer;">
+            <label for="consent2"
+              style="font-size:0.95rem; line-height:1.4; cursor:pointer; font-weight: normal; text-transform: none; text-align: left;">I
+              agree that my anonymized results may be reviewed by clinicians in this portal.</label>
+          </div>
+          <div class="form-group" style="display:flex; gap:0.75rem; align-items:flex-start;">
+            <input type="checkbox" id="consent3" required
+              style="width:20px; height:20px; margin-top:2px; cursor:pointer;">
+            <label for="consent3"
+              style="font-size:0.95rem; line-height:1.4; cursor:pointer; font-weight: normal; text-transform: none; text-align: left;">I
+              understand that Geetha's Garden is a screening tool, not a clinical diagnosis.</label>
+          </div>
+          <button type="submit" class="btn btn-green mb-3" style="width:100%;">Agree &amp; Register ➔</button>
+        </form>
+      </div>
+    </div>
+
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/app.js"></script>
+  <script>
+    // Spawn floating garden emojis
+    const emojis = ['🌻', '🌸', '🌼', '🌷', '🌹', '🌺', '🍃', '🌿', '🍂', '🦋', '🐝', '🌾', '🍁', '🍀', '🍄', '🪴', '🐞', '🏵️', '💮', '💐', '🌱', '🌳'];
+    const container = document.getElementById('floatEmojis');
+    for (let i = 0; i < 22; i++) {
+      const el = document.createElement('div');
+      el.className = 'float-emoji';
+      el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+      el.style.left = Math.random() * 100 + 'vw';
+      el.style.fontSize = (1.5 + Math.random() * 6.0) + 'rem';
+      el.style.animationDuration = (12 + Math.random() * 18) + 's';
+      el.style.animationDelay = (-Math.random() * 20) + 's';
+      container.appendChild(el);
+    }
+
+    function togglePassword() {
+      const inp = document.getElementById('authPassword');
+      const btn = document.getElementById('showPwBtn');
+      if (inp.type === 'password') { inp.type = 'text'; btn.textContent = 'Hide'; }
+      else { inp.type = 'password'; btn.textContent = 'Show'; }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      localStorage.removeItem('activeUser');
+      localStorage.removeItem('activeDoctor');
+    });
+  </script>
+</body>
+
+</html>

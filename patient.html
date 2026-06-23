@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Patient Assessment | Geetha's Garden</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+  <div class="garden-background">
+    <!-- Abstract geometric background graphics (Shades of Blue Garden Theme) -->
+    <svg class="bg-graphic bg-graphic-tl" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M-30,220 C120,200 240,320 350,180" stroke="var(--primary-dark)" stroke-opacity="0.15"
+        stroke-width="1.8" />
+      <path d="M-30,270 C150,250 270,370 380,230" stroke="var(--color-blue)" stroke-opacity="0.2" stroke-width="1.5" />
+      <path d="M-20,-20 Q120,80 80,320 T280,480" stroke="#4A90E2" stroke-width="2.5" stroke-opacity="0.25"
+        fill="none" />
+      <path d="M60,160 C80,150 90,130 80,110 C70,130 50,140 60,160 Z" fill="var(--color-blue)" fill-opacity="0.08"
+        stroke="var(--color-blue)" stroke-opacity="0.25" stroke-width="1.5" />
+      <path d="M90,220 C110,230 130,220 135,200 C115,200 100,210 90,220 Z" fill="#4A90E2" fill-opacity="0.06"
+        stroke="#4A90E2" stroke-opacity="0.25" stroke-width="1.5" />
+      <path d="M120,310 C140,330 160,335 170,320 C155,305 135,300 120,310 Z" fill="var(--color-blue)"
+        fill-opacity="0.08" stroke="var(--color-blue)" stroke-opacity="0.25" stroke-width="1.5" />
+      <path d="M210,400 C230,410 240,430 230,450 C220,430 200,420 210,400 Z" fill="#4A90E2" fill-opacity="0.06"
+        stroke="#4A90E2" stroke-opacity="0.25" stroke-width="1.5" />
+    </svg>
+    <svg class="bg-graphic bg-graphic-tr" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M320,-50 C260,20 260,110 320,170 C380,110 380,20 320,-50 Z" fill="var(--color-blue)" fill-opacity="0.08"
+        stroke="var(--color-blue)" stroke-opacity="0.25" stroke-width="2" />
+      <path d="M320,-50 L320,170" stroke="var(--color-blue)" stroke-opacity="0.25" stroke-width="1.5" />
+      <path d="M420,50 C380,100 390,170 440,210 C490,170 480,100 420,50 Z" fill="#4A90E2" fill-opacity="0.06"
+        stroke="#4A90E2" stroke-opacity="0.22" stroke-width="1.5" />
+      <path d="M420,50 Q430,130 440,210" stroke="#4A90E2" stroke-opacity="0.2" stroke-width="1.2" fill="none" />
+      <path d="M220,-30 C300,80 280,180 380,220 C480,260 450,380 530,410" stroke="var(--primary-dark)"
+        stroke-opacity="0.12" stroke-width="1.5" fill="none" />
+    </svg>
+    <svg class="bg-graphic bg-graphic-bl" viewBox="0 0 600 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M-50,480 C30,400 120,410 180,480 C120,550 30,560 -50,480 Z" fill="#4A90E2" fill-opacity="0.07"
+        stroke="#4A90E2" stroke-opacity="0.22" stroke-width="2" />
+      <path d="M-50,480 Q65,480 180,480" stroke="#4A90E2" stroke-opacity="0.2" stroke-width="1.5" fill="none" />
+      <path d="M40,380 C110,320 180,350 220,420 C180,490 110,460 40,380 Z" fill="var(--color-blue)" fill-opacity="0.08"
+        stroke="var(--color-blue)" stroke-opacity="0.25" stroke-width="2" />
+      <path d="M40,380 Q130,400 220,420" stroke="var(--color-blue)" stroke-opacity="0.25" stroke-width="1.5"
+        fill="none" />
+      <path d="M-40,280 C60,280 120,380 220,360 S380,480 480,440" stroke="var(--primary-dark)" stroke-opacity="0.12"
+        stroke-width="1.8" fill="none" />
+      <path d="M-40,320 C60,320 120,420 220,400 S380,520 480,480" stroke="var(--color-blue)" stroke-opacity="0.18"
+        stroke-dasharray="4,4" stroke-width="1.5" fill="none" />
+    </svg>
+    <svg class="bg-graphic bg-graphic-br" viewBox="0 0 550 550" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M580,280 C480,280 420,360 350,340 S220,480 180,580" stroke="var(--primary-dark)" stroke-opacity="0.15"
+        stroke-width="24" stroke-linecap="round" fill="none" />
+      <path d="M580,280 C480,280 420,360 350,340 S220,480 180,580" stroke="#fbe4a0" stroke-opacity="0.9"
+        stroke-width="18" stroke-linecap="round" stroke-dasharray="2,6" fill="none" />
+      <circle cx="280" cy="380" r="22" fill="var(--color-blue)" fill-opacity="0.08" stroke="var(--color-blue)"
+        stroke-opacity="0.25" stroke-width="1.5" />
+      <circle cx="295" cy="395" r="14" fill="#4A90E2" fill-opacity="0.06" stroke="#4A90E2" stroke-opacity="0.25"
+        stroke-width="1.2" />
+      <circle cx="430" cy="310" r="30" fill="var(--color-blue)" fill-opacity="0.08" stroke="var(--color-blue)"
+        stroke-opacity="0.2" stroke-width="1.5" stroke-dasharray="3,3" />
+      <path d="M460,420 Q480,360 540,380" stroke="#4A90E2" stroke-width="2" stroke-opacity="0.25" fill="none" />
+      <path d="M470,410 Q500,370 535,410" stroke="var(--color-blue)" stroke-width="1.5" stroke-opacity="0.25"
+        fill="none" />
+    </svg>
+    <svg class="bg-graphic bg-graphic-lm" viewBox="0 0 250 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M20,600 C60,500 0,400 30,300 C60,200 -10,100 20,0" stroke="#4A90E2" stroke-width="2" stroke-opacity="0.2"
+        fill="none" />
+      <path d="M30,520 C50,510 65,490 55,475 C40,480 30,500 30,520 Z" fill="var(--color-blue)" fill-opacity="0.08"
+        stroke="var(--color-blue)" stroke-opacity="0.25" stroke-width="1.2" />
+      <path d="M15,430 C-5,420 -20,440 -10,455 C5,450 10,435 15,430 Z" fill="#4A90E2" fill-opacity="0.06"
+        stroke="#4A90E2" stroke-opacity="0.25" stroke-width="1.2" />
+      <path d="M42,320 C62,310 70,290 60,275 C45,280 40,300 42,320 Z" fill="var(--color-blue)" fill-opacity="0.08"
+        stroke="var(--color-blue)" stroke-opacity="0.25" stroke-width="1.2" />
+      <path d="M20,210 C0,200 -15,220 -5,235 C10,230 15,215 20,210 Z" fill="#4A90E2" fill-opacity="0.06"
+        stroke="#4A90E2" stroke-opacity="0.25" stroke-width="1.2" />
+      <path d="M35,100 C55,90 65,70 55,55 C40,60 30,80 35,100 Z" fill="var(--color-blue)" fill-opacity="0.08"
+        stroke="var(--color-blue)" stroke-opacity="0.25" stroke-width="1.2" />
+    </svg>
+    <svg class="bg-graphic bg-graphic-rm" viewBox="0 0 250 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M230,50 C180,150 280,250 230,350 S130,550 180,600" stroke="#4A90E2" stroke-width="1.5"
+        stroke-dasharray="3,6" stroke-opacity="0.25" fill="none" />
+      <path d="M250,100 C150,180 180,320 150,420" stroke="var(--color-blue)" stroke-width="1.5" stroke-opacity="0.2"
+        fill="none" />
+      <path d="M160,220 C180,210 190,195 180,180 C165,185 155,205 160,220 Z" fill="var(--color-blue)"
+        fill-opacity="0.08" stroke="var(--color-blue)" stroke-opacity="0.22" stroke-width="1.2" />
+      <path d="M120,380 C140,370 145,355 135,340 C120,345 115,365 120,380 Z" fill="#4A90E2" fill-opacity="0.06"
+        stroke="#4A90E2" stroke-opacity="0.2" stroke-width="1.2" />
+    </svg>
+  </div>
+
+  <!-- ── Navbar ─────────────────────────────────────────────── -->
+  <header class="navbar">
+    <div class="logo-group">
+      <span class="logo-icon">😷</span>
+      <span class="logo-text"></span>
+    </div>
+    <div class="nav-progress-wrapper">
+      <div class="progress-container" id="navProgressBar">
+        <div id="progressBarFill" class="progress-bar-fill"></div>
+        <div id="progressText" class="progress-text">Step 0 of 8</div>
+      </div>
+    </div>
+    <div class="nav-actions">
+      <button class="btn btn-icon" id="infoBtn" onclick="toggleInfoOverlay()"
+        title="How does this step work?">ℹ️</button>
+      <button class="btn btn-icon" id="pauseBtn" onclick="openPauseModal()" title="Pause">⏸️</button>
+      <button class="btn btn-icon" id="skipBtn" title="Skip Step">⏭️</button>
+      <button class="btn btn-red" onclick="confirmLogout()">Logout</button>
+    </div>
+  </header>
+
+  <!-- ── Fullscreen content ──────────────────────────────────── -->
+  <div class="fullscreen-container">
+
+    <!-- Mascot (always hidden) -->
+    <div class="mascot-dialogue d-none" id="mascotBox">
+      <div class="mascot-avatar">👵🏽</div>
+      <div class="mascot-text">
+        <div class="mascot-name">Grandma Rose</div>
+        <div class="mascot-bubble" id="mascotDialogueText"></div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════
+       WELCOME SCREEN
+  ════════════════════════════════════════════════════════════ -->
+    <div id="screenWelcome">
+      <h2 id="welcomeName">Welcome back!</h2>
+      <div class="info-box mb-3" style="max-width:520px;">
+        <div class="info-box-title">Getting started! 🌸</div>
+        <p id="motivationalQuote" style="margin:0;">Every visit starts with a hello. Tell Geetha a little about your day
+          so you can get to know each other better, and then journey with her into the garden.</p>
+      </div>
+      <button class="btn btn-green" onclick="startPreAssessment()">
+        START ▶
+      </button>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════
+       PRE-ASSESSMENT STEPS
+  ════════════════════════════════════════════════════════════ -->
+
+    <!-- Step 1: Emotion & Time of Day -->
+    <div class="d-none step-centered" id="stepEmotion">
+      <div style="width:100%;max-width:640px;">
+        <div
+          style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;border-bottom:var(--border-main);padding-bottom:.7rem;">
+          <h3>Daily Check-in</h3>
+        </div>
+        <div class="info-box mb-2">
+          <p style="margin:0;">How are you feeling today?</p>
+        </div>
+        <div class="options-grid" id="emotionGrid">
+          <div class="option-card" onclick="selectEmotion('Very Happy', this)">
+            <img class="option-image-no-border" src="images/mood-very-happy.jpg" alt="Very Happy"><span
+              class="option-label">Very Happy</span>
+          </div>
+          <div class="option-card" onclick="selectEmotion('Happy',      this)">
+            <img class="option-image-no-border" src="images/mood-happy.jpg" alt="Happy"><span
+              class="option-label">Happy</span>
+          </div>
+          <div class="option-card" onclick="selectEmotion('Neutral',    this)">
+            <img class="option-image-no-border" src="images/mood-neutral.jpg" alt="Neutral"><span
+              class="option-label">Neutral</span>
+          </div>
+          <div class="option-card" onclick="selectEmotion('Sad',        this)">
+            <img class="option-image-no-border" src="images/mood-sad.jpg" alt="Sad"><span
+              class="option-label">Sad</span>
+          </div>
+        </div>
+        <div class="info-box mb-2 mt-2">
+          <p style="margin:0;">What time of day is it now?</p>
+        </div>
+        <div class="options-grid" id="todGrid">
+          <div class="option-card" onclick="selectTimeOfDay('Morning',   this)">
+            <img class="option-image-no-border" src="images/time-morning.jpg" alt="Morning"><span
+              class="option-label">Morning</span>
+          </div>
+          <div class="option-card" onclick="selectTimeOfDay('Afternoon', this)">
+            <img class="option-image-no-border" src="images/time-afternoon.jpg" alt="Afternoon"><span
+              class="option-label">Afternoon</span>
+          </div>
+          <div class="option-card" onclick="selectTimeOfDay('Evening',   this)">
+            <img class="option-image-no-border" src="images/time-evening.jpg" alt="Evening"><span
+              class="option-label">Evening</span>
+          </div>
+          <div class="option-card" onclick="selectTimeOfDay('Night',     this)">
+            <img class="option-image-no-border" src="images/time-night.jpg" alt="Night"><span
+              class="option-label">Night</span>
+          </div>
+        </div>
+        <div style="display:flex; gap:0.75rem; align-items:center;" class="mt-3">
+          <button class="btn btn-reddish" onclick="goBack()" title="Go Back">◀ Previous Page</button>
+          <button id="continueStep1" class="btn btn-submit-pending" onclick="submitStep1()"
+            style="margin-top:0 !important;">Continue ▶</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: Orientation -->
+    <div class="d-none step-centered" id="stepOrientation">
+      <div style="width:100%;max-width:700px;">
+        <div
+          style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;border-bottom:var(--border-main);padding-bottom:.7rem;">
+          <h3>Time &amp; Place</h3>
+        </div>
+        <div class="info-box mb-3">
+          <p style="margin:0;">Please tell us today's date and where you currently are.</p>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.25rem;">
+          <div class="form-group">
+            <label class="form-label" for="orientDate">Date (number)</label>
+            <input type="number" id="orientDate" class="form-input" min="1" max="31" placeholder="e.g. 15"
+              autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="orientMonth">Month</label>
+            <select id="orientMonth" class="form-select">
+              <option value="">-- Select --</option>
+              <option>January</option>
+              <option>February</option>
+              <option>March</option>
+              <option>April</option>
+              <option>May</option>
+              <option>June</option>
+              <option>July</option>
+              <option>August</option>
+              <option>September</option>
+              <option>October</option>
+              <option>November</option>
+              <option>December</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="orientYear">Year</label>
+            <input type="number" id="orientYear" class="form-input" min="2020" max="2035" placeholder="e.g. 2026"
+              autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="orientDay">Day of week</label>
+            <select id="orientDay" class="form-select">
+              <option value="">-- Select --</option>
+              <option>Monday</option>
+              <option>Tuesday</option>
+              <option>Wednesday</option>
+              <option>Thursday</option>
+              <option>Friday</option>
+              <option>Saturday</option>
+              <option>Sunday</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="orientLocation">Where are you?</label>
+            <input type="text" id="orientLocation" class="form-input" placeholder="e.g. Living Room" autocomplete="off">
+          </div>
+          <div class="form-group" style="grid-column:1/-1;">
+            <label class="form-label" for="orientCity">City / Town</label>
+            <input type="text" id="orientCity" class="form-input" placeholder="e.g. Mumbai" autocomplete="off">
+          </div>
+        </div>
+        <div style="display:flex; gap:0.75rem; align-items:center;" class="mt-3">
+          <button class="btn btn-reddish" onclick="goBack()" title="Go Back">◀ Previous Page</button>
+          <button class="btn btn-green" onclick="submitStep2()" style="margin-top:0 !important;">Continue ▶</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Object Naming -->
+    <div class="d-none step-centered" id="stepNaming">
+      <div style="width:100%;max-width:900px;">
+        <div
+          style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;border-bottom:var(--border-main);padding-bottom:.7rem;">
+          <h3>Identification</h3>
+        </div>
+        <div class="info-box mb-3">
+          <p style="margin:0;">Look at the items below and type their names.</p>
+        </div>
+        <div class="naming-grid-row" id="namingGrid">
+          <!-- Cards injected by JS -->
+        </div>
+        <div style="display:flex; gap:0.75rem; align-items:center;" class="mt-3">
+          <button class="btn btn-reddish" onclick="goBack()" title="Go Back">◀ Previous Page</button>
+          <button class="btn btn-green" onclick="submitStep3()" style="margin-top:0 !important;">Continue ▶</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4: Memory Encoding -->
+    <div class="d-none step-centered" id="stepEncoding">
+      <div style="width:100%;max-width:900px;">
+        <div
+          style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;border-bottom:var(--border-main);padding-bottom:.7rem;">
+          <h3>Memory Study</h3>
+        </div>
+        <div class="info-box mb-3">
+          <div class="info-box-title">Study these carefully:</div>
+          <p style="margin:0;">Memorize the five items below — you will be asked to identify them later!</p>
+        </div>
+        <div class="encoding-grid" id="encodingGrid">
+          <!-- Cards injected by JS -->
+        </div>
+        <div style="display:flex; gap:0.75rem; align-items:center;" class="mt-3">
+          <button class="btn btn-reddish" onclick="goBack()" title="Go Back">◀ Previous Page</button>
+          <button class="btn btn-green" onclick="submitStep4()" style="margin-top:0 !important;">I've memorized them
+            ▶</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5: Serial Subtraction -->
+    <div class="d-none step-centered" id="stepSubtraction">
+      <div style="width:100%;max-width:480px;text-align:center;">
+        <div
+          style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;border-bottom:var(--border-main);padding-bottom:.7rem;">
+          <h3>Garden Calculation</h3>
+        </div>
+        <div class="info-box mb-3" style="text-align:left;">
+          <p id="subtractionPrompt" style="margin:0;">Subtract the value shown and type your answer.</p>
+        </div>
+        <div class="subtraction-display" id="subMathDisplay">100 − 7</div>
+        <div class="form-group" style="max-width:260px;margin:0 auto 1.25rem auto;">
+          <input type="number" id="subInput" class="form-input text-center" style="font-size:2rem;" placeholder="?"
+            autocomplete="off">
+        </div>
+        <div style="display:flex; gap:0.75rem; align-items:center; justify-content:center;">
+          <button class="btn btn-reddish" onclick="goBack()" title="Go Back">◀ Previous Page</button>
+          <button class="btn btn-green" onclick="submitSubtractionRound()">Submit Answer ▶</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 6: Sentence Repetition -->
+    <div class="d-none step-centered" id="stepSentence">
+      <div style="width:100%;max-width:640px;text-align:center;">
+        <div
+          style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;border-bottom:var(--border-main);padding-bottom:.7rem;">
+          <h3>Sentence Recall</h3>
+        </div>
+        <div class="info-box mb-3" style="text-align:left;">
+          <p id="sentenceIntro" style="margin:0;">Memorize the sentence — it will hide in 5 seconds, then recite it
+            aloud.</p>
+        </div>
+        <div class="sentence-box" id="sentenceTextDisplay">"The sunny sunset garden smells of fresh lavender and wet
+          earth."</div>
+        <div class="info-box d-none" id="sentenceScoringPanel" style="background-color:var(--color-blue-light);">
+          <div class="info-box-title text-center">Did you recite it correctly?</div>
+          <div class="flex-center mt-2" style="gap:1rem;">
+            <button class="btn btn-green" onclick="scoreSentence(true)">Yes, correctly</button>
+            <button class="btn btn-red" onclick="scoreSentence(false)">No, had mistakes</button>
+          </div>
+        </div>
+        <div id="sentenceStartBtnContainer"
+          style="display:flex; gap:0.75rem; align-items:center; justify-content:center;">
+          <button class="btn btn-reddish" onclick="goBack()" title="Go Back">◀ Previous Page</button>
+          <button class="btn btn-blue" onclick="startSentenceRound()">Show Sentence ▶</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 7: Verbal Fluency -->
+    <div class="d-none step-centered" id="stepFluency">
+      <div style="width:100%;max-width:520px;text-align:center;">
+        <div
+          style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;border-bottom:var(--border-main);padding-bottom:.7rem;">
+          <h3>Word Garden</h3>
+        </div>
+        <div class="info-box mb-3" style="text-align:left;">
+          <p id="fluencyPrompt" style="margin:0;">Type as many unique words starting with the letter below. Press
+            Enter after each.</p>
+        </div>
+        <!-- Letter card with timer badge top-right -->
+        <div class="fluency-letter-card">
+          <div class="subtraction-display" id="fluencyLetter" style="margin:0;">Letter: S</div>
+          <div class="fluency-timer-badge" id="fluencyTimer">60s</div>
+        </div>
+        <div id="fluencyInputGroup" style="margin-top:1.25rem;">
+          <input type="text" id="fluencyWordInput" class="form-input text-center"
+            style="font-size:1.35rem;max-width:340px;margin:0 auto;" placeholder="Start typing..." autocomplete="off">
+        </div>
+        <div class="fluency-word-list" id="fluencyWordsContainer" style="margin-top:.75rem;">
+          <span style="color:#666;font-style:italic;">No words yet — type and press Enter.</span>
+        </div>
+        <div id="fluencyButtonsContainer" class="mt-3"
+          style="display:flex; gap:0.75rem; align-items:center; justify-content:center;">
+          <button class="btn btn-reddish" onclick="goBack()" title="Go Back">◀ Previous Page</button>
+          <button class="btn btn-green d-none" id="fluencySubmitBtn" onclick="submitStep7()"
+            style="margin-top:0 !important; flex:1;">Complete Task ➔</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 8: Abstract Similarities -->
+    <div class="d-none step-centered" id="stepSimilarities">
+      <div style="width:100%;max-width:560px;text-align:center;">
+        <div
+          style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;border-bottom:var(--border-main);padding-bottom:.7rem;">
+          <h3>Garden Connections</h3>
+        </div>
+        <div class="info-box mb-3" style="text-align:left;">
+          <p style="margin:0;">How are these two alike?</p>
+        </div>
+        <div class="naming-grid-row" style="max-width:420px;margin:0 auto 1.25rem auto;">
+          <div class="naming-card">
+            <div class="naming-image-box-img">
+              <img src="images/dist-apple.jpg" alt="Apple"
+                style="width:100%;height:100%;object-fit:cover;display:block;">
+            </div>
+            <strong>Apple</strong>
+          </div>
+          <div class="naming-card">
+            <div class="naming-image-box-img">
+              <img src="images/recall-mango.jpg" alt="Mango"
+                style="width:100%;height:100%;object-fit:cover;display:block;">
+            </div>
+            <strong>Mango</strong>
+          </div>
+        </div>
+        <div class="form-group" style="text-align:left;max-width:420px;margin:0 auto;">
+          <input type="text" id="similarityInput" class="form-input" placeholder="In what way are they similar?"
+            autocomplete="off">
+        </div>
+        <div style="display:flex; gap:0.75rem; align-items:center; justify-content:center;" class="mt-3">
+          <button class="btn btn-reddish" onclick="goBack()" title="Go Back">◀ Previous Page</button>
+          <button class="btn btn-green" onclick="submitStep8()" style="margin-top:0 !important;">Finish ▶</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════
+       SESSION 1 COMPLETE SCREEN
+    ════════════════════════════════════════════════════════════ -->
+    <div class="d-none step-centered" id="screenSession1Complete">
+      <div style="width:100%;max-width:600px;text-align:center;">
+        <div style="font-size:4rem;margin-bottom:1rem;">🌸</div>
+        <h2 style="font-family:var(--font-serif);margin-bottom:.75rem;">Wonderful!</h2>
+        <p style="font-size:1.2rem;margin-bottom:1.5rem;">Congratulations on finishing the first session!</p>
+        <div class="info-box" style="background-color:var(--color-green-light);text-align:left;">
+          <div class="info-box-title" style="color:#1a6e3c;">🌻 Now that we know each other…</div>
+          <p style="margin:0;font-size:1.1rem;">We can start the journey through <strong>Geetha's Garden</strong>. Get
+            ready to explore and have fun!</p>
+        </div>
+        <button class="btn btn-green mt-3" style="font-size:1.1rem;padding:.85rem 2rem;"
+          onclick="startGardenJourney()">Enter the Garden ➔</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════
+       GAMES
+  ════════════════════════════════════════════════════════════ -->
+    <div class="d-none" id="screenGameWrapper" style="width:100%;">
+      <div
+        style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;border-bottom:var(--border-main);padding-bottom:.7rem;"
+        id="gameTitleHeader">
+        <h3 id="gameTitle">Game 1: Flower Memory</h3>
+      </div>
+
+      <!-- Instructions -->
+      <div id="gameIntroPanel">
+        <!-- Title row -->
+        <div
+          style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;border-bottom:var(--border-main);padding-bottom:.75rem;">
+          <span id="gameIntroEmoji" style="font-size:2rem;">🌸</span>
+          <h2 id="gameIntroTitle" style="margin:0;font-family:var(--font-serif);">Game 1: Flower Memory</h2>
+        </div>
+
+        <!-- Instruction card -->
+        <div class="info-box mb-3">
+          <div class="info-box-title" id="gameGoalTitle" style="margin-bottom:.5rem;">How to play:</div>
+          <p id="gameDescription" style="margin:0;font-size:1.05rem;line-height:1.6;">Watch the sequence of flowers and
+            click them in the same order.</p>
+        </div>
+
+        <!-- Rules chips -->
+        <div id="gameRulesList" style="display:flex;flex-direction:column;gap:.45rem;margin-bottom:1.25rem;"></div>
+
+        <!-- Demo video thumbnail — click to open overlay -->
+        <div id="demoThumb" onclick="openDemoOverlay()" style="position:relative;width:100%;max-width:480px;aspect-ratio:16/9;
+                 background:var(--primary-dark);border:var(--border-main);
+                 box-shadow:var(--shadow-main);cursor:pointer;
+                 display:flex;align-items:center;justify-content:center;
+                 flex-direction:column;gap:.6rem;margin-bottom:1.25rem;overflow:hidden;">
+          <!-- animated mini preview lives here -->
+          <canvas id="demoThumbCanvas" style="position:absolute;inset:0;width:100%;height:100%;opacity:.35;"></canvas>
+          <div style="position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:.55rem;">
+            <div style="width:56px;height:56px;border:2.5px solid #fff;background:rgba(255,255,255,.15);
+                        display:flex;align-items:center;justify-content:center;font-size:1.5rem;">▶</div>
+            <span style="color:#fff;font-size:.88rem;font-family:var(--font-sans);opacity:.85;">Watch how to play</span>
+          </div>
+        </div>
+
+        <!-- CTA buttons -->
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+          <button class="btn btn-yellow-demo" id="startPracticeBtn" onclick="openDemoOverlay()">show demo ▶</button>
+          <button class="btn btn-blue-skip" id="skipGuideBtn" onclick="skipToActualGame()">skip demo ▶</button>
+        </div>
+        <p id="gamePracticeIntroText" style="font-size:.82rem;color:#666;margin-top:.6rem;">
+          We recommend watching the demo first, then practicing before the main game.
+        </p>
+      </div>
+
+      <!-- ── DEMO OVERLAY ─────────────────────────────────────── -->
+      <div id="demoOverlay" style="display:none;position:fixed;inset:0;z-index:900;
+           background:rgba(3,0,34,.6);align-items:center;justify-content:center;">
+        <div style="background:#FAFCF2;border:var(--border-main);box-shadow:8px 8px 0 rgba(80,80,100,.28);
+                    width:min(660px,95vw);padding:1.75rem 2rem;position:relative;">
+          <!-- Header -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;
+                      border-bottom:var(--border-main);padding-bottom:.75rem;">
+            <h3 id="demoOverlayTitle" style="margin:0;font-family:var(--font-serif);">Demo: Flower Memory</h3>
+            <button onclick="closeDemoOverlay()"
+              style="background:none;border:none;font-size:1.4rem;cursor:pointer;padding:2px 6px;border:var(--border-main);">✕</button>
+          </div>
+
+          <!-- Animation canvas -->
+          <div style="position:relative;width:100%;aspect-ratio:16/9;border:var(--border-main);
+                      background:var(--color-blue-light);overflow:hidden;margin-bottom:1rem;">
+            <canvas id="demoAnimCanvas" style="width:100%;height:100%;display:block;"></canvas>
+            <!-- replay icon -->
+            <button id="demoReplayBtn" onclick="replayDemo()" style="position:absolute;top:8px;right:8px;width:36px;height:36px;
+                     border:var(--border-main);background:#fff;cursor:pointer;
+                     font-size:1.1rem;display:flex;align-items:center;justify-content:center;">↺</button>
+          </div>
+
+          <!-- Caption -->
+          <p id="demoCaption"
+            style="font-size:.93rem;color:#444;margin-bottom:1.25rem;min-height:2.4em;line-height:1.5;text-align:center;">
+          </p>
+
+          <!-- Action buttons -->
+          <div style="display:flex;gap:.75rem;">
+            <button class="btn btn-green" id="demoOverlayPracticeBtn" style="flex:1;"
+              onclick="closeDemoOverlay();startPracticeMode();">Start Practice ▶</button>
+            <button class="btn btn-orange" id="demoOverlayGameBtn" style="flex:1;"
+              onclick="closeDemoOverlay();skipToActualGame();">Start Game ▶</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Play Area -->
+      <div id="gamePlayPanel" class="d-none">
+        <!-- Practice indicator only -->
+        <div id="practiceIndicator" class="badge badge-pink d-none" style="display:inline-block;margin-bottom:.75rem;">
+          Practice Mode</div>
+
+        <div class="game-container" id="gameContainer">
+          <div class="practice-cursor-hand d-none" id="practiceCursor">👆</div>
+
+          <!-- Game 1 -->
+          <div id="game1Wrapper" class="d-none"
+            style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+            <div id="game1StatusIndicator"
+              style="font-weight:800;font-size:1.35rem;text-align:center;margin-bottom:1rem;text-transform:uppercase;letter-spacing:0.05em;">
+              OBSERVE... 🔍</div>
+            <div style="position: relative; max-width: 400px; width: 100%;">
+              <div id="game1StartCircle" class="start-circle">start</div>
+              <div class="flower-memory-grid" id="game1FlowerGrid">
+                <div class="flower-btn" data-id="0" onclick="handleFlowerClick(0)"></div>
+                <div class="flower-btn" data-id="1" onclick="handleFlowerClick(1)"></div>
+                <div class="flower-btn" data-id="2" onclick="handleFlowerClick(2)"></div>
+                <div class="flower-btn" data-id="3" onclick="handleFlowerClick(3)"></div>
+                <div class="flower-btn" data-id="4" onclick="handleFlowerClick(4)"></div>
+                <div class="flower-btn" data-id="5" onclick="handleFlowerClick(5)"></div>
+                <div class="flower-btn" data-id="6" onclick="handleFlowerClick(6)"></div>
+                <div class="flower-btn" data-id="7" onclick="handleFlowerClick(7)"></div>
+                <div class="flower-btn" data-id="8" onclick="handleFlowerClick(8)"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Game 2 -->
+          <div class="mole-grid mole-grid-3x3 d-none" id="game2MoleGrid"></div>
+
+          <!-- Game 3 -->
+          <div id="game3SequenceHeader" class="info-box text-center d-none"
+            style="margin-bottom:1rem;background-color:var(--color-blue-light);font-weight:800;font-size:1.15rem;width:100%;">
+            Connect in order: <span id="game3SequenceText" style="color:var(--color-pink);">1 ➔ A ➔ 2 ➔ B</span>
+          </div>
+          <div class="trail-canvas-container d-none" id="game3TrailGrid">
+            <svg class="trail-svg-overlay" id="game3SvgLines"></svg>
+            <div id="game3NodesWrapper"></div>
+          </div>
+
+          <!-- Game 4 -->
+          <div class="clock-canvas-wrapper d-none" id="game4ClockWrapper">
+            <p style="margin:0 0 .5rem 0;text-align:center;">
+              Draw a clock face.<br>
+              <strong id="clockTimeDisplay" style="font-size:1.4rem;font-family:var(--font-serif);">Set hands to:
+                11:10</strong>
+            </p>
+            <canvas class="drawing-canvas" id="clockDrawingCanvas" width="340" height="340"></canvas>
+            <div class="canvas-controls">
+              <button class="btn btn-blue btn-icon" onclick="undoCanvas()" title="Undo">↩️</button>
+              <button class="btn btn-red  btn-icon" onclick="resetCanvas()" title="Reset">🗑️</button>
+              <button class="btn btn-orange" onclick="toggleCanvasGuides()">Guide Circles</button>
+              <button class="btn btn-green" id="submitClockBtn" onclick="submitClockCanvas()">Submit Clock ➔</button>
+            </div>
+          </div>
+
+          <!-- Game 5 -->
+          <div class="d-none" id="game5StroopWrapper"
+            style="width:100%;display:flex;flex-direction:column;align-items:center;">
+            <div class="stroop-word-display" id="stroopWordText">GREEN</div>
+            <div class="stroop-buttons" id="stroopButtonsContainer"></div>
+          </div>
+
+          <!-- Game 6 -->
+          <div class="recall-grid d-none" id="game6RecallGrid"></div>
+        </div>
+
+        <button class="btn btn-green mt-3 d-none" id="nextPhaseBtn" onclick="transitionFromPracticeToActual()">
+          Start Main Game ➔
+        </button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════
+       FEEDBACK
+  ════════════════════════════════════════════════════════════ -->
+    <div class="d-none step-centered" id="screenFeedback">
+      <div style="width:100%;max-width:640px;">
+        <h3 style="margin-bottom:1.1rem;border-bottom:var(--border-main);padding-bottom:.7rem;">Garden Feedback &amp;
+          Insights</h3>
+        <p class="mb-2">Thank you! Please help us understand your experience:</p>
+        <form id="feedbackForm" onsubmit="submitFeedback(event)">
+          <p class="mb-2"><strong>1. Did you enjoy the garden games?</strong></p>
+          <div class="options-grid mb-3" id="enjoyGrid">
+            <div class="option-card" onclick="selectFeedbackOption('enjoy','loved',   this)"><span
+                class="option-emoji">💖</span><span class="option-label">Loved</span></div>
+            <div class="option-card" onclick="selectFeedbackOption('enjoy','good',    this)"><span
+                class="option-emoji">🙂</span><span class="option-label">Liked</span></div>
+            <div class="option-card" onclick="selectFeedbackOption('enjoy','ok',      this)"><span
+                class="option-emoji">😐</span><span class="option-label">Neutral</span></div>
+            <div class="option-card" onclick="selectFeedbackOption('enjoy','disliked',this)"><span
+                class="option-emoji">😞</span><span class="option-label">Disliked</span></div>
+          </div>
+          <p class="mb-2"><strong>2. How easy were the instructions?</strong></p>
+          <div class="options-grid mb-3" id="difficultyGrid">
+            <div class="option-card" onclick="selectFeedbackOption('easy','very',    this)"><span
+                class="option-emoji">🟢</span><span class="option-label">Very Easy</span></div>
+            <div class="option-card" onclick="selectFeedbackOption('easy','moderate',this)"><span
+                class="option-emoji">🟡</span><span class="option-label">Moderate</span></div>
+            <div class="option-card" onclick="selectFeedbackOption('easy','hard',    this)"><span
+                class="option-emoji">🟠</span><span class="option-label">Hard</span></div>
+            <div class="option-card" onclick="selectFeedbackOption('easy','confusing',this)"><span
+                class="option-emoji">🔴</span><span class="option-label">Confusing</span></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="feedbackComments">Any comments?</label>
+            <textarea id="feedbackComments" class="form-input" rows="3"
+              style="font-family:var(--font-sans);resize:none;" autocomplete="off"></textarea>
+          </div>
+          <button type="submit" class="btn btn-green mt-2" style="width:100%;">Submit Feedback ➔</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════
+       CONGRATULATIONS
+  ════════════════════════════════════════════════════════════ -->
+    <div class="d-none step-centered" id="screenCongratulations">
+      <div id="trophyRow" class="trophy-row">🏆</div>
+      <h2 style="margin-bottom:.5rem;">Wonderful Job!</h2>
+      <p style="font-size:1.15rem;margin-bottom:1.5rem;">You've completed all parts of the cognitive screening.</p>
+      <div class="notification-box text-center" style="max-width:540px;">
+        <div class="notification-box-title">Garden Fully Blooming! 🌻</div>
+        <p style="margin:0;">"Your responses and drawings have been recorded securely. Take a deep breath and have a
+          restful day."</p>
+      </div>
+      <div class="flex-center mt-3" style="gap:1.25rem;">
+        <button class="btn btn-blue" onclick="restartScreening()">Try Again</button>
+        <button class="btn btn-red" onclick="confirmLogout()">Exit</button>
+      </div>
+    </div>
+
+  </div><!-- /fullscreen-container -->
+
+  <!-- Modals -->
+  <div class="modal-overlay d-none" id="pauseModal">
+    <div class="modal-card">
+      <h2 class="mb-2">Paused ⏸️</h2>
+      <p class="mb-3">Progress saved. Take your time.</p>
+      <div class="flex-center" style="flex-direction:column;gap:.9rem;">
+        <button class="btn btn-green" onclick="closePauseModal()" style="width:100%;">Resume ➔</button>
+        <button class="btn btn-orange" onclick="viewAssessmentInfo()" style="width:100%;">About this step
+          (Info)</button>
+        <button class="btn btn-red" onclick="exitToDashboard()" style="width:100%;">Exit to Login</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay d-none" id="infoModal">
+    <div class="modal-card">
+      <h2 class="mb-2" id="infoModalTitle">About this Step ℹ️</h2>
+      <p class="mb-4" id="infoModalBody">Take your time to complete your inputs.</p>
+      <button class="btn btn-blue" onclick="closeInfoOverlay()" style="width:100%;">Got it!</button>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/app.js"></script>
+  <script src="js/games.js"></script>
+  <script src="js/demo_engine.js"></script>
+
+</body>
+
+</html>

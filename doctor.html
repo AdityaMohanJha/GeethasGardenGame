@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clinician Portal | Geetha's Garden</title>
+  <link rel="stylesheet" href="css/style.css">
+  <meta name="description" content="Secure administrative panel for reviewing cognitive screening results.">
+</head>
+
+<body>
+
+  <div class="garden-background"></div>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="logo-group">
+      <span class="logo-icon">🩺</span>
+      <span class="logo-text"></span>
+    </div>
+    <div class="nav-actions">
+      <button class="btn btn-red" onclick="confirmLogout()">Logout</button>
+    </div>
+  </header>
+
+  <main style="max-width:1100px;margin:0 auto;padding:calc(var(--navbar-h) + 1.5rem) 2rem 2rem 2rem;">
+
+    <!-- Search bar only -->
+    <div style="display:flex;gap:1rem;align-items:center;margin-bottom:1.25rem;">
+      <span style="font-size:1.4rem;">🔍</span>
+      <input type="text" id="patientSearchInput" class="form-input" placeholder="Search patients by name or username…"
+        oninput="filterPatientsList()" style="margin-bottom:0;max-width:480px;">
+    </div>
+
+    <!-- Patients Table -->
+    <div class="stats-table-wrapper">
+      <table class="stats-table">
+        <thead>
+          <tr>
+            <th>Patient Name</th>
+            <th>Username</th>
+            <th>Last Screened</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="patientsTableBody">
+          <tr>
+            <td colspan="5" class="text-center" style="padding:2rem;color:#666;font-style:italic;">No patient records
+              found.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+
+  <!-- ══════════════════════════════════════════════════════════
+     FULL-SCREEN REPORT OVERLAY
+══════════════════════════════════════════════════════════════ -->
+  <div class="report-overlay" id="reportOverlay">
+    <div class="report-close-bar">
+      <h3 id="reportTitle">Assessment Record</h3>
+      <div style="display:flex;gap:.75rem;align-items:center;">
+        <span class="badge badge-pink" id="reportDateBadge">Date</span>
+        <button class="btn btn-orange" id="markViewedBtn" onclick="markCurrentViewed()">Mark Viewed ✓</button>
+        <button class="btn btn-red" onclick="closeReport()">✕ Close</button>
+      </div>
+    </div>
+
+    <div class="patient-details-grid" id="reportGrid">
+
+      <!-- Box 0: Demographics -->
+      <div class="patient-stat-card">
+        <h4>Demographics</h4>
+        <div style="line-height:1.9;">
+          <p><strong>Age:</strong> <span id="repAge">N/A</span></p>
+          <p><strong>Gender:</strong> <span id="repGender">N/A</span></p>
+          <p><strong>Contact:</strong> <span id="repContact">N/A</span></p>
+          <p><strong>Education:</strong> <span id="repEducation">N/A</span></p>
+          <p><strong>Tech Familiarity:</strong> <span id="repTech">N/A</span></p>
+        </div>
+      </div>
+
+      <!-- Box 1: Check-in & Orientation -->
+      <div class="patient-stat-card">
+        <h4>1. Check-in &amp; Orientation</h4>
+        <div style="line-height:1.9;">
+          <p><strong>Feeling:</strong> <span id="repFeeling">N/A</span></p>
+          <p><strong>Time of Day:</strong> <span id="repTimeOfDay">N/A</span></p>
+          <p><strong>Date stated:</strong> <span id="repDate">N/A</span></p>
+          <p><strong>Month:</strong> <span id="repMonth">N/A</span></p>
+          <p><strong>Year:</strong> <span id="repYear">N/A</span></p>
+          <p><strong>Day:</strong> <span id="repDayOfWeek">N/A</span></p>
+          <p><strong>Location:</strong> <span id="repLocation">N/A</span></p>
+          <p><strong>City:</strong> <span id="repCity">N/A</span></p>
+        </div>
+      </div>
+
+      <!-- Box 2: Cognitive Responses -->
+      <div class="patient-stat-card">
+        <h4>2. Cognitive Responses</h4>
+        <div style="line-height:1.9;">
+          <p><strong>Object Naming:</strong></p>
+          <ul style="margin-left:1.25rem;margin-bottom:.9rem;" id="repNamingList">
+            <li>🍎 <strong id="repNaming1">N/A</strong> <span id="repNamingExp1"></span></li>
+            <li>⏰ <strong id="repNaming2">N/A</strong> <span id="repNamingExp2"></span></li>
+            <li>🚲 <strong id="repNaming3">N/A</strong> <span id="repNamingExp3"></span></li>
+          </ul>
+          <p><strong>Serial Subtraction:</strong></p>
+          <p id="repSubList" style="margin-left:1.25rem;font-family:monospace;font-size:.95rem;margin-bottom:.9rem;">—
+          </p>
+          <p><strong>Sentence Repetition:</strong></p>
+          <ul style="margin-left:1.25rem;margin-bottom:.9rem;">
+            <li>Round 1: <strong id="repSent1">N/A</strong></li>
+            <li>Round 2: <strong id="repSent2">N/A</strong></li>
+          </ul>
+          <p><strong>Verbal Fluency:</strong> Letter <strong id="repFluencyLetter">N/A</strong></p>
+          <div
+            style="background:var(--color-blue-light);border:var(--border-main);padding:.5rem;max-height:80px;overflow-y:auto;margin-bottom:.9rem;"
+            id="repFluencyWords">—</div>
+          <p><strong>Abstract Similarity:</strong></p>
+          <p style="font-style:italic;margin-left:1.25rem;" id="repSimilarityText">N/A</p>
+        </div>
+      </div>
+
+      <!-- Box 3: Game Scores -->
+      <div class="patient-stat-card" style="grid-column:1/-1;">
+        <h4>3. Game Performance</h4>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1.1rem;">
+          <div class="info-box" style="margin-bottom:0;">
+            <div class="info-box-title">Game 1: Flower Memory 🌻</div>
+            <p>Sequence Max: <strong id="game1Seq">N/A</strong></p>
+            <p>Score: <strong id="game1Score">N/A</strong></p>
+          </div>
+          <div class="info-box" style="margin-bottom:0;">
+            <div class="info-box-title">Game 2: Whack-a-Mole 🐹</div>
+            <p>Grid Size: <strong id="game2Grid">N/A</strong></p>
+            <p>Hits: <strong id="game2Score">N/A</strong></p>
+          </div>
+          <div class="info-box" style="margin-bottom:0;">
+            <div class="info-box-title">Game 3: Garden Path 🔗</div>
+            <p>Nodes: <strong id="game3Nodes">N/A</strong></p>
+            <p>Time: <strong id="game3Time">N/A</strong></p>
+          </div>
+          <div class="info-box" style="margin-bottom:0;">
+            <div class="info-box-title">Game 5: Colour Stroop 🎨</div>
+            <p>Accuracy: <strong id="game5Acc">N/A</strong></p>
+            <p>Avg RT: <strong id="game5RT">N/A</strong></p>
+          </div>
+          <div class="info-box" style="margin-bottom:0;">
+            <div class="info-box-title">Game 6: Delayed Recall 🧠</div>
+            <p>Correct: <strong id="game6Recall">N/A</strong> / 5</p>
+            <p>Distractors: <strong id="game6Distractors">N/A</strong></p>
+          </div>
+          <div class="info-box" style="margin-bottom:0;">
+            <div class="info-box-title">Patient Feedback 💬</div>
+            <p>Enjoyment: <strong id="repFeedbackEnjoy">N/A</strong></p>
+            <p>Clarity: <strong id="repFeedbackEasy">N/A</strong></p>
+            <p style="font-style:italic;" id="repFeedbackNotes">—</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Box 4: Clock Drawing -->
+      <div class="patient-stat-card" style="grid-column:1/-1;text-align:center;">
+        <h4>4. Clock Drawing (Game 4)</h4>
+        <p class="mb-2">Target time: <strong>11:10</strong></p>
+        <div
+          style="display:inline-block;border:var(--border-main);padding:1rem;background:#fff;box-shadow:var(--shadow-main);">
+          <div id="noClockDrawingMsg"
+            style="width:340px;height:340px;display:flex;align-items:center;justify-content:center;background:#EEE;color:#555;">
+            No Drawing Submitted
+          </div>
+          <img id="clockDrawingImage" style="display:none;max-width:340px;height:auto;" src=""
+            alt="Patient Clock Drawing">
+        </div>
+      </div>
+
+    </div><!-- /patient-details-grid -->
+  </div><!-- /report-overlay -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  
+  <script src="js/app.js"></script>
+</body>
+
+</html>
