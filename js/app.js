@@ -1,12 +1,70 @@
-const SUPABASE_URL = 'https://vtpgtvzzqmrkrbvnyfoi.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ0cGd0dnp6cW1ya3Jidm55Zm9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5MjIwNjAsImV4cCI6MjA5NzQ5ODA2MH0.9H3svBbVNyv24SJh7EVJzGE19mpZRj_AJTmC93m9v_k';
-
-// FIXED: Renamed to supabaseClient to prevent collision with window.supabase
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-// heyy
 // ============================================================
 // App State Management & Core Logic
 // ============================================================
+
+window.CustomDialog = {
+  _createOverlay() {
+    const overlay = document.createElement('div');
+    overlay.className = 'custom-dialog-overlay';
+    document.body.appendChild(overlay);
+    return overlay;
+  },
+  _createBox(title, message) {
+    const box = document.createElement('div');
+    box.className = 'custom-dialog-box';
+    box.innerHTML = `
+      <h3>${title}</h3>
+      <p>${message}</p>
+      <div class="custom-dialog-buttons"></div>
+    `;
+    return box;
+  },
+  alert(message) {
+    return new Promise(resolve => {
+      const overlay = this._createOverlay();
+      const box = this._createBox('Alert', message);
+      const btnContainer = box.querySelector('.custom-dialog-buttons');
+      
+      const okBtn = document.createElement('button');
+      okBtn.className = 'btn btn-green';
+      okBtn.textContent = 'OK';
+      okBtn.onclick = () => {
+        document.body.removeChild(overlay);
+        resolve();
+      };
+      
+      btnContainer.appendChild(okBtn);
+      overlay.appendChild(box);
+    });
+  },
+  confirm(message) {
+    return new Promise(resolve => {
+      const overlay = this._createOverlay();
+      const box = this._createBox('Please Confirm', message);
+      const btnContainer = box.querySelector('.custom-dialog-buttons');
+      
+      const cancelBtn = document.createElement('button');
+      cancelBtn.className = 'btn btn-red';
+      cancelBtn.textContent = 'Cancel';
+      cancelBtn.onclick = () => {
+        document.body.removeChild(overlay);
+        resolve(false);
+      };
+      
+      const okBtn = document.createElement('button');
+      okBtn.className = 'btn btn-green';
+      okBtn.textContent = 'Confirm';
+      okBtn.onclick = () => {
+        document.body.removeChild(overlay);
+        resolve(true);
+      };
+      
+      btnContainer.appendChild(cancelBtn);
+      btnContainer.appendChild(okBtn);
+      overlay.appendChild(box);
+    });
+  }
+};
 
 // Web Audio API Sound Synthesizer for interactive feedback
 window.GardenAudio = {
@@ -96,6 +154,7 @@ window.GardenAudio = {
 document.addEventListener('click', (e) => {
   const btn = e.target.closest('.btn');
   if (btn && !btn.disabled && !btn.classList.contains('no-cooldown') && !btn.classList.contains('btn-cooldown-active')) {
+    // Button click sound removed as requested
     btn.classList.add('btn-cooldown-active');
     btn.style.pointerEvents = 'none';
     setTimeout(() => {
@@ -103,8 +162,54 @@ document.addEventListener('click', (e) => {
       btn.style.pointerEvents = '';
     }, 600);
   }
+
 }, true);
 
+
+// ── Database bootstrap ────────────────────────────────────────
+function initDatabase() {
+  if (!localStorage.getItem('usersDB')) {
+    const defaultUsers = [
+      { username: 'rose_gardener', name: 'Grandma Rose', password: 'password123', role: 'patient' },
+      { username: 'dr_sarah', name: 'Dr. Sarah', password: 'password123', role: 'doctor' }
+    ];
+    localStorage.setItem('usersDB', JSON.stringify(defaultUsers));
+  }
+  if (!localStorage.getItem('patientAssessments')) {
+    const dummy = [{
+      username: 'rose_gardener', name: 'Grandma Rose',
+      date: new Date().toLocaleDateString(),
+      viewed: false,
+      preAssessment: {
+        feeling: 'Calm', timeOfDay: 'Evening',
+        orientation: { date: '16', month: 'June', year: '2026', day: 'Tuesday', location: 'Lounge', city: 'Mumbai' },
+        naming: { obj1: 'Apple', obj2: 'Clock', obj3: 'Bicycle' },
+        subtraction: [
+          { question: '88-7', answer: '81', correct: true }, { question: '81-7', answer: '74', correct: true },
+          { question: '74-7', answer: '67', correct: true }, { question: '67-7', answer: '60', correct: true },
+          { question: '60-7', answer: '53', correct: true }
+        ],
+        sentenceRepetition: [
+          { sentence: 'The sunny sunset garden smells of fresh lavender and wet earth.', result: 'Correct' },
+          { sentence: 'Two busy bees carried golden pollen back to the wooden hive.', result: 'Correct' }
+        ],
+        verbalFluency: { letter: 'S', words: ['Sun', 'Sunset', 'Seed', 'Sprout', 'Soil'] },
+        similarities: 'Both are fruits.'
+      },
+      games: {
+        flowerMemory: { maxSeq: 5, score: 120 },
+        whackMole: { maxGrid: '3x3', hits: 14 },
+        gardenPath: { nodes: 6, time: '24 seconds' },
+        stroop: { acc: '92%', rt: '1.2 seconds' },
+        delayedRecall: { correct: 4, distractors: 3 },
+        clockDrawing: ''
+      },
+      feedback: { enjoy: 'Loved them', easy: 'Very Easy', comments: '' }
+    }];
+    localStorage.setItem('patientAssessments', JSON.stringify(dummy));
+  }
+}
+initDatabase();
 
 // ── Auth ──────────────────────────────────────────────────────
 let activeRole = 'patient';
@@ -123,6 +228,7 @@ function updateAuthFields() {
   const tfg = document.getElementById('techFieldGroup');
   const cs = document.getElementById('consentSection');
 
+  // Reset visibility of standard card elements
   const toggleGrp = document.querySelector('.login-toggle-group');
   if (toggleGrp) toggleGrp.classList.remove('d-none');
   if (t) t.classList.remove('d-none');
@@ -183,22 +289,16 @@ function toggleMode(e) {
   updateAuthFields();
 }
 
-// ASYNC DB CALL: Checking and inserting users in Supabase
-async function handleAuthSubmit(event) {
+function handleAuthSubmit(event) {
   event.preventDefault();
   const nameInput = document.getElementById('regName')?.value.trim() || '';
   const usernameInput = document.getElementById('authUsername').value.trim();
   const passwordInput = document.getElementById('authPassword').value;
+  const usersDB = JSON.parse(localStorage.getItem('usersDB') || '[]');
 
   if (authMode === 'register') {
-    const { data: existingUsers, error: selErr } = await supabaseClient
-      .from('users')
-      .select('id')
-      .eq('username', usernameInput)
-      .eq('role', activeRole);
-
-    if (existingUsers && existingUsers.length > 0) {
-      alert('An account with that username already exists.'); return;
+    if (usersDB.some(u => u.username.toLowerCase() === usernameInput.toLowerCase() && u.role === activeRole)) {
+      CustomDialog.alert('An account with that username already exists.'); return;
     }
 
     if (activeRole === 'patient') {
@@ -229,58 +329,41 @@ async function handleAuthSubmit(event) {
         gender: document.getElementById('regGender').value.trim(),
         contact: document.getElementById('regContact').value.trim()
       };
-      
-      const { error: insErr } = await supabaseClient.from('users').insert([newUser]);
-      if (insErr) { alert('Error registering: ' + insErr.message); return; }
-
-      // Keep minimal session active locally for routing
+      usersDB.push(newUser);
+      localStorage.setItem('usersDB', JSON.stringify(usersDB));
       localStorage.setItem('activeDoctor', JSON.stringify(newUser));
       window.location.href = 'doctor.html';
     }
   } else {
-    const { data: users, error } = await supabaseClient
-      .from('users')
-      .select('*')
-      .eq('username', usernameInput)
-      .eq('password', passwordInput)
-      .eq('role', activeRole);
-
-    if (error || !users || users.length === 0) { alert('Invalid username or password.'); return; }
-    
-    const user = users[0];
-    if (activeRole === 'patient') { 
-        localStorage.setItem('activeUser', JSON.stringify(user)); 
-        window.location.href = 'patient.html'; 
-    } else { 
-        localStorage.setItem('activeDoctor', JSON.stringify(user)); 
-        window.location.href = 'doctor.html'; 
-    }
+    const user = usersDB.find(u => u.username.toLowerCase() === usernameInput.toLowerCase() && u.password === passwordInput && u.role === activeRole);
+    if (!user) { CustomDialog.alert('Invalid username or password.'); return; }
+    if (activeRole === 'patient') { localStorage.setItem('activeUser', JSON.stringify(user)); window.location.href = 'patient.html'; }
+    else { localStorage.setItem('activeDoctor', JSON.stringify(user)); window.location.href = 'doctor.html'; }
   }
 }
 
-// ASYNC DB CALL: Submitting Consent and completing Patient Registration
-async function handleConsentSubmit(event) {
+function handleConsentSubmit(event) {
   event.preventDefault();
   const c1 = document.getElementById('consent1').checked;
   const c2 = document.getElementById('consent2').checked;
   const c3 = document.getElementById('consent3').checked;
   if (!c1 || !c2 || !c3) {
-    alert('Please accept all consent items to proceed.');
+    CustomDialog.alert('Please accept all consent items to proceed.');
     return;
   }
 
   if (window.tempRegData) {
-    const { error } = await supabaseClient.from('users').insert([window.tempRegData]);
-    if (error) { alert('Registration failed: ' + error.message); return; }
-
+    const usersDB = JSON.parse(localStorage.getItem('usersDB') || '[]');
+    usersDB.push(window.tempRegData);
+    localStorage.setItem('usersDB', JSON.stringify(usersDB));
     localStorage.setItem('activeUser', JSON.stringify(window.tempRegData));
     delete window.tempRegData;
     window.location.href = 'patient.html';
   }
 }
 
-function confirmLogout() {
-  if (confirm('Are you sure you want to log out?')) {
+async function confirmLogout() {
+  if (await CustomDialog.confirm('Are you sure you want to log out?')) {
     localStorage.removeItem('activeUser');
     localStorage.removeItem('activeDoctor');
     window.location.href = 'index.html';
@@ -301,7 +384,7 @@ function startPreAssessment() {
   updateAssessmentView();
 }
 
-// Back button handler
+// Back button handler — each step goes to the previous one
 function goBack() {
   if (currentStep <= 1) {
     document.getElementById('screenWelcome').style.display = '';
@@ -310,6 +393,7 @@ function goBack() {
     updateProgress(0, 8);
     return;
   }
+  // Handle the fractional step 8.5 → go back to 8
   if (currentStep === 8.5) {
     currentStep = 8;
   } else {
@@ -342,10 +426,10 @@ function updateAssessmentView() {
     updateProgress(currentStep, 8);
     if (skipBtn) skipBtn.classList.remove('d-none');
   } else if (currentStep === 8.5) {
-    updateProgress(8, 8); 
+    updateProgress(8, 8); // all pre-assessment steps complete
     if (skipBtn) skipBtn.classList.add('d-none');
   } else if (currentStep === 9) {
-    updateProgress(6, 6); 
+    updateProgress(6, 6); // games manage their own bar updates via games.js
     if (skipBtn) skipBtn.classList.add('d-none');
   } else {
     updateProgress(0, 0);
@@ -355,6 +439,7 @@ function updateAssessmentView() {
   switch (currentStep) {
     case 1: document.getElementById('stepEmotion').classList.remove('d-none'); break;
     case 2: document.getElementById('stepOrientation').classList.remove('d-none');
+      // Clear fields so autofill cannot pre-populate them
       ['orientDate', 'orientMonth', 'orientYear', 'orientDay'].forEach(id => {
         const el = document.getElementById(id); if (el) el.value = '';
       });
@@ -386,6 +471,7 @@ function updateAssessmentView() {
   }
 }
 
+// Mascot — always hidden (grandma disabled globally)
 function showMascot() {
   const el = document.getElementById('mascotBox');
   if (el) el.classList.remove('d-none');
@@ -438,7 +524,7 @@ function submitStep2() {
   const location = document.getElementById('orientLocation').value.trim();
   const city = document.getElementById('orientCity').value.trim();
   if (!date || !month || !year || !day || !location || !city) {
-    alert('Please complete all fields. Write "Unsure" if you are not certain.'); return;
+    CustomDialog.alert('Please complete all fields. Write "Unsure" if you are not certain.'); return;
   }
   currentAssessmentData.orientation = { date, month, year, day, location, city };
   currentStep = 3; updateAssessmentView();
@@ -449,7 +535,7 @@ function submitStep3() {
   const obj1 = document.getElementById('namingObj1').value.trim();
   const obj2 = document.getElementById('namingObj2').value.trim();
   const obj3 = document.getElementById('namingObj3').value.trim();
-  if (!obj1 || !obj2 || !obj3) { alert('Please name all three objects.'); return; }
+  if (!obj1 || !obj2 || !obj3) { CustomDialog.alert('Please name all three objects.'); return; }
   currentAssessmentData.naming = { 
     obj1, obj2, obj3,
     expected: _namingSelected ? _namingSelected.map(i => i.label) : []
@@ -482,21 +568,9 @@ function submitSubtractionRound() {
   if (val === '') return;
   const expected = subCurrentNum - subDiff;
   const parsed = parseInt(val, 10);
-  const isCorrect = (parsed === expected);
 
-  if (isCorrect) {
-    if (window.GardenAudio) window.GardenAudio.playSuccess();
-  } else {
-    if (window.GardenAudio) window.GardenAudio.playError();
-    const inpEl = document.getElementById('subInput');
-    if (inpEl) {
-      inpEl.classList.add('shake');
-      setTimeout(() => inpEl.classList.remove('shake'), 400);
-    }
-  }
-
-  currentAssessmentData.subtraction.push({ question: `${subCurrentNum}-${subDiff}`, answer: val, correct: isCorrect });
-  subCurrentNum = expected;
+  currentAssessmentData.subtraction.push({ question: `${subCurrentNum}-${subDiff}`, answer: val, expected: expected });
+  subCurrentNum = isNaN(parsed) ? expected : parsed;
   subRoundIndex++;
   const inp = document.getElementById('subInput');
   inp.value = '';
@@ -531,16 +605,21 @@ function startSentenceRound() {
   setTimeout(() => {
     display.classList.add('d-none');
     document.getElementById('sentenceScoringPanel').classList.remove('d-none');
+    const inp = document.getElementById('sentenceInput');
+    if(inp) { inp.value = ''; inp.focus(); }
   }, 5000);
 }
 
-function scoreSentence(isCorrect) {
-  if (isCorrect) {
-    if (window.GardenAudio) window.GardenAudio.playSuccess();
-  } else {
-    if (window.GardenAudio) window.GardenAudio.playError();
-  }
-  currentAssessmentData.sentenceRepetition.push({ sentence: sentenceRounds[sentenceIndex], result: isCorrect ? 'Correct' : 'Incorrect' });
+function submitSentence() {
+  const inp = document.getElementById('sentenceInput');
+  const typed = inp ? inp.value.trim() : '';
+  if (!typed) { CustomDialog.alert('Please type the sentence from memory.'); return; }
+  
+  currentAssessmentData.sentenceRepetition.push({ 
+    expected: sentenceRounds[sentenceIndex], 
+    typed: typed 
+  });
+  
   document.getElementById('sentenceScoringPanel').classList.add('d-none');
   sentenceIndex++;
   if (sentenceIndex < 2) {
@@ -594,7 +673,12 @@ function finishFluencyRound() {
   const inp = document.getElementById('fluencyWordInput');
   inp.disabled = true;
   document.getElementById('fluencyInputGroup').classList.add('d-none');
-  document.getElementById('fluencySubmitBtn').classList.remove('d-none');
+  const btn = document.getElementById('fluencySubmitBtn');
+  btn.classList.remove('d-none');
+  if (fluencyWordsList.length > 0) {
+    btn.classList.remove('btn-submit-pending');
+    btn.classList.add('btn-green');
+  }
 }
 
 function submitStep7() {
@@ -605,12 +689,13 @@ function submitStep7() {
 // ── Step 8: Abstract Similarities ────────────────────────────
 function submitStep8() {
   const val = document.getElementById('similarityInput').value.trim();
-  if (!val) { alert('Please describe how the Apple and Mango are similar.'); return; }
+  if (!val) { CustomDialog.alert('Please describe how the Apple and Mango are similar.'); return; }
   currentAssessmentData.similarities = val;
   localStorage.setItem('tempAssessmentData', JSON.stringify(currentAssessmentData));
   currentStep = 8.5; updateAssessmentView();
 }
 
+// ── Session 1 Complete → Enter Garden ────────────────────────
 function startGardenJourney() {
   currentStep = 9; updateAssessmentView();
 }
@@ -634,6 +719,7 @@ let _namingSelected = [];
 function initNamingImages() {
   const grid = document.getElementById('namingGrid');
   if (!grid) return;
+  // Pick 3 random unique items
   const shuffled = [...namingPool].sort(() => Math.random() - 0.5);
   _namingSelected = shuffled.slice(0, 3);
   grid.innerHTML = _namingSelected.map((item, i) => `
@@ -684,10 +770,12 @@ function initEncodingImages() {
   `).join('');
 }
 
+// ── Skip button ───────────────────────────────────────────────
 function handleSkip() {
   if (currentStep >= 1 && currentStep <= 8) { currentStep++; updateAssessmentView(); }
 }
 
+// ── Modals ────────────────────────────────────────────────────
 function openPauseModal() { document.getElementById('pauseModal').classList.remove('d-none'); }
 function closePauseModal() { document.getElementById('pauseModal').classList.add('d-none'); }
 function closeInfoOverlay() { document.getElementById('infoModal').classList.add('d-none'); }
@@ -713,8 +801,8 @@ function toggleInfoOverlay() {
   modal.classList.remove('d-none');
 }
 
-function exitToDashboard() {
-  if (confirm('Exit? Current step data will be discarded.')) window.location.href = 'index.html';
+async function exitToDashboard() {
+  if (await CustomDialog.confirm('Exit? Current step data will be discarded.')) window.location.href = 'index.html';
 }
 
 // ── Feedback & Congrats ───────────────────────────────────────
@@ -728,15 +816,12 @@ function selectFeedbackOption(category, val, el) {
   else selectedFeedbackEasy = val;
 }
 
-// ASYNC DB CALL: Submit complete screening assessment to Supabase
-async function submitFeedback(event) {
+function submitFeedback(event) {
   event.preventDefault();
-  if (!selectedFeedbackEnjoy || !selectedFeedbackEasy) { alert('Please answer both survey questions.'); return; }
-  
+  if (!selectedFeedbackEnjoy || !selectedFeedbackEasy) { CustomDialog.alert('Please answer both survey questions.'); return; }
   const activeUser = JSON.parse(localStorage.getItem('activeUser') || '{}');
   const tempData = JSON.parse(localStorage.getItem('tempAssessmentData') || '{}');
   const gameResults = JSON.parse(localStorage.getItem('tempGameResults') || '{}');
-  
   const finalReport = {
     username: activeUser.username || 'anonymous',
     name: activeUser.name || 'Anonymous',
@@ -751,19 +836,17 @@ async function submitFeedback(event) {
     games: gameResults,
     feedback: { enjoy: selectedFeedbackEnjoy, easy: selectedFeedbackEasy, comments: document.getElementById('feedbackComments').value.trim() }
   };
-
-  const { error } = await supabaseClient.from('assessments').insert([finalReport]);
-  if (error) {
-    console.error('Error saving report to Supabase:', error);
-    alert('There was a problem saving your report. Please contact an admin.');
-  }
-
+  const list = JSON.parse(localStorage.getItem('patientAssessments') || '[]');
+  list.push(finalReport);
+  localStorage.setItem('patientAssessments', JSON.stringify(list));
   currentStep = 11; updateAssessmentView();
 }
 
+// ── Congratulations: trophies + falling flowers ───────────────
 function triggerCongratulations() {
   if (window.GardenAudio) window.GardenAudio.playFanfare();
 
+  // Compute performance score 0-5
   const gameResults = JSON.parse(localStorage.getItem('tempGameResults') || '{}');
   let score = 0;
   if (gameResults.flowerMemory && gameResults.flowerMemory.maxSeq >= 4) score++;
@@ -772,6 +855,7 @@ function triggerCongratulations() {
   if (gameResults.stroop && parseInt(gameResults.stroop.acc) >= 70) score++;
   if (gameResults.delayedRecall && gameResults.delayedRecall.correct >= 3) score++;
 
+  // Render trophies
   const trophyRow = document.getElementById('trophyRow');
   if (trophyRow) {
     const filled = '🏆'.repeat(score);
@@ -779,6 +863,7 @@ function triggerCongratulations() {
     trophyRow.innerHTML = `<span style="font-size:2.6rem;">${filled}${empty}</span>`;
   }
 
+  // Falling flowers
   spawnFallingFlowers();
 }
 
@@ -806,28 +891,14 @@ function restartScreening() {
 
 // ── Clinician Dashboard ───────────────────────────────────────
 let _currentReportIndex = -1;
-window.cachedAssessments = [];
 
-// ASYNC DB CALL: Pull all patient assessments from Supabase
-async function loadDoctorDashboard() {
+function loadDoctorDashboard() {
   const activeDoc = localStorage.getItem('activeDoctor');
   if (!activeDoc) { window.location.href = 'index.html'; return; }
   const docObj = JSON.parse(activeDoc);
   const badge = document.getElementById('doctorNameBadge');
   if (badge) badge.innerText = docObj.name || docObj.username;
-  
-  const { data, error } = await supabaseClient
-    .from('assessments')
-    .select('*')
-    .order('id', { ascending: false });
-
-  if (error) {
-    console.error('Error fetching assessments:', error);
-  } else {
-    window.cachedAssessments = data || [];
-  }
-  
-  renderPatientsTable(window.cachedAssessments);
+  renderPatientsTable(JSON.parse(localStorage.getItem('patientAssessments') || '[]'));
 }
 
 function renderPatientsTable(list) {
@@ -859,15 +930,12 @@ function renderPatientsTable(list) {
 
 function filterPatientsList() {
   const q = document.getElementById('patientSearchInput').value.toLowerCase();
-  const list = window.cachedAssessments || [];
-  renderPatientsTable(list.filter(a => 
-      (a.name && a.name.toLowerCase().includes(q)) || 
-      (a.username && a.username.toLowerCase().includes(q))
-  ));
+  const list = JSON.parse(localStorage.getItem('patientAssessments') || '[]');
+  renderPatientsTable(list.filter(a => a.name.toLowerCase().includes(q) || a.username.toLowerCase().includes(q)));
 }
 
 function showPatientReport(index) {
-  const list = window.cachedAssessments || [];
+  const list = JSON.parse(localStorage.getItem('patientAssessments') || '[]');
   const record = list[index];
   if (!record) return;
   _currentReportIndex = index;
@@ -878,6 +946,7 @@ function showPatientReport(index) {
   document.getElementById('reportTitle').innerText = `Report: ${record.name}`;
   document.getElementById('reportDateBadge').innerText = `Date: ${record.date}`;
 
+  // Demographics fields in report
   document.getElementById('repAge').innerText = record.age || 'N/A';
   document.getElementById('repGender').innerText = record.gender || 'N/A';
   document.getElementById('repContact').innerText = record.contact || 'N/A';
@@ -900,18 +969,27 @@ function showPatientReport(index) {
   document.getElementById('repNaming2').innerText = n.obj2 || 'Unanswered';
   document.getElementById('repNaming3').innerText = n.obj3 || 'Unanswered';
   const expected = n.expected || ['Apple', 'Clock', 'Bicycle'];
-  document.getElementById('repNamingExp1').innerText = `(${expected[0] || '?'})`;
-  document.getElementById('repNamingExp2').innerText = `(${expected[1] || '?'})`;
-  document.getElementById('repNamingExp3').innerText = `(${expected[2] || '?'})`;
+  const checkNaming = (ans, exp) => (!ans) ? '❌' : (ans.toLowerCase().trim() === exp.toLowerCase().trim() ? '✅' : '❌');
+  document.getElementById('repNamingExp1').innerText = `(Expected: ${expected[0] || '?'}) ${checkNaming(n.obj1, expected[0])}`;
+  document.getElementById('repNamingExp2').innerText = `(Expected: ${expected[1] || '?'}) ${checkNaming(n.obj2, expected[1])}`;
+  document.getElementById('repNamingExp3').innerText = `(Expected: ${expected[2] || '?'}) ${checkNaming(n.obj3, expected[2])}`;
 
   const sub = pa.subtraction || [];
   document.getElementById('repSubList').innerHTML = sub.length
-    ? sub.map(s => `${s.question} = ${s.answer} ${s.correct ? '<span style="color:green;">✓</span>' : '<span style="color:var(--color-red);">✗</span>'}`).join('<br>')
+    ? sub.map(s => {
+        const isCorrect = (parseInt(s.answer, 10) === parseInt(s.expected, 10));
+        const mark = isCorrect ? '✅' : '❌';
+        return `${s.question} = <strong>${s.answer}</strong> <span class="text-muted" style="color:#888;">(Expected: ${s.expected || '?'})</span> ${mark}`;
+      }).join('<br>')
     : '—';
 
   const sent = pa.sentenceRepetition || [];
-  document.getElementById('repSent1').innerText = sent[0]?.result || 'N/A';
-  document.getElementById('repSent2').innerText = sent[1]?.result || 'N/A';
+  const s1 = sent[0];
+  const s2 = sent[1];
+  const cleanStr = (s) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const checkSentence = (ans, exp) => cleanStr(ans) === cleanStr(exp) ? '✅' : '❌';
+  document.getElementById('repSent1').innerHTML = s1 ? `${s1.typed} <span class="text-muted" style="color:#888;font-weight:normal;">(Expected: ${s1.expected})</span> ${checkSentence(s1.typed, s1.expected)}` : 'N/A';
+  document.getElementById('repSent2').innerHTML = s2 ? `${s2.typed} <span class="text-muted" style="color:#888;font-weight:normal;">(Expected: ${s2.expected})</span> ${checkSentence(s2.typed, s2.expected)}` : 'N/A';
 
   const fl = pa.verbalFluency || {};
   document.getElementById('repFluencyLetter').innerText = fl.letter || 'N/A';
@@ -920,39 +998,65 @@ function showPatientReport(index) {
   document.getElementById('repSimilarityText').innerText = pa.similarities || 'N/A';
 
   const g = record.games || {};
-  document.getElementById('game1Seq').innerText = g.flowerMemory?.maxSeq || 'N/A';
-  document.getElementById('game1Score').innerText = g.flowerMemory?.score || 'N/A';
-  document.getElementById('game2Grid').innerText = g.whackMole?.maxGrid || 'N/A';
-  document.getElementById('game2Score').innerText = g.whackMole?.hits ?? 'N/A';
-  document.getElementById('game2MRT').innerText = g.whackMole?.mrt != null ? `${g.whackMole.mrt} ms` : 'N/A';
-  document.getElementById('game2RTV').innerText = g.whackMole?.rtv != null ? `±${g.whackMole.rtv} ms` : 'N/A';
-  document.getElementById('game2Omission').innerText = g.whackMole?.omissionErrors ?? 'N/A';
-  document.getElementById('game2Commission').innerText = g.whackMole?.commissionErrors ?? 'N/A';
-  document.getElementById('game2Recovery').innerText = g.whackMole?.recoveryTimeMs != null ? `${g.whackMole.recoveryTimeMs} ms` : 'N/A';
-  document.getElementById('game2Adapt').innerText = g.whackMole?.adaptabilityDrop != null ? `${g.whackMole.adaptabilityDrop}%` : 'N/A';
-  document.getElementById('game2P1MRT').innerText = g.whackMole?.phase1MRT != null ? `${g.whackMole.phase1MRT} ms` : 'N/A';
-  document.getElementById('game2P2MRT').innerText = g.whackMole?.phase2MRT != null ? `${g.whackMole.phase2MRT} ms` : 'N/A';
-  document.getElementById('game2P3MRT').innerText = g.whackMole?.phase3MRT != null ? `${g.whackMole.phase3MRT} ms` : 'N/A';
-  document.getElementById('game2GridExpand').innerText = g.whackMole?.reachedGridExpand != null ? (g.whackMole.reachedGridExpand ? 'Yes ✅' : 'No') : 'N/A';
-  document.getElementById('game3Nodes').innerText = g.gardenPath?.nodes || 'N/A';
-  document.getElementById('game3Time').innerText = g.gardenPath?.time || 'N/A';
-  document.getElementById('game5Acc').innerText = g.stroop?.acc || 'N/A';
-  document.getElementById('game5RT').innerText = g.stroop?.rt || 'N/A';
-  document.getElementById('game6Recall').innerText = g.delayedRecall?.correct ?? 'N/A';
-  document.getElementById('game6Distractors').innerText = g.delayedRecall?.distractors ?? 'N/A';
 
-  const fd = record.feedback || {};
-  document.getElementById('repFeedbackEnjoy').innerText = fd.enjoy || 'N/A';
-  document.getElementById('repFeedbackEasy').innerText = fd.easy || 'N/A';
-  document.getElementById('repFeedbackNotes').innerText = fd.comments || '—';
+  // ── Game 1: Flower Memory ─────────────────────────────────
+  const gf = g.flowerMemory || {};
+  document.getElementById('g1MaxSpan').innerText      = gf.max_span ?? 'N/A';
+  document.getElementById('g1AccuracyRate').innerText = gf.accuracy_rate != null ? `${gf.accuracy_rate}%` : 'N/A';
+  document.getElementById('g1EncLatency').innerText   = gf.encoding_latency_ms != null ? `${gf.encoding_latency_ms} ms` : 'N/A';
+  document.getElementById('g1SeqErrors').innerText    = gf.sequence_error_count ?? 'N/A';
+  document.getElementById('g1SpatialErrors').innerText= gf.spatial_error_count ?? 'N/A';
+
+  // ── Game 2: Whack-a-Mole ─────────────────────────────────
+  const gw = g.whackMole || {};
+  document.getElementById('g2MeanRT').innerText        = gw.mean_hit_rt_ms != null ? `${gw.mean_hit_rt_ms} ms` : 'N/A';
+  document.getElementById('g2RTVariance').innerText    = gw.rt_variance    != null ? `±${gw.rt_variance} ms` : 'N/A';
+  document.getElementById('g2OmissionErrors').innerText  = gw.omission_errors   ?? 'N/A';
+  document.getElementById('g2CommissionErrors').innerText= gw.commission_errors ?? 'N/A';
+  document.getElementById('g2Hits').innerText          = gw.hits            ?? 'N/A';
+  document.getElementById('g2Targets').innerText       = gw.total_targets   ?? 'N/A';
+  document.getElementById('g2HighestLevel').innerText  = gw.highest_level   ?? 'N/A';
+
+  // ── Game 3: Garden Path ───────────────────────────────────
+  const gp = g.gardenPath || {};
+  document.getElementById('g3PathTime').innerText     = gp.total_path_time_sec != null ? `${gp.total_path_time_sec} s` : 'N/A';
+  document.getElementById('g3SeqErrors').innerText    = gp.sequence_error_count ?? 'N/A';
+  document.getElementById('g3CorrLatency').innerText  = gp.correction_latency_ms != null ? `${gp.correction_latency_ms} ms` : 'N/A';
+  document.getElementById('g3DwellTime').innerText    = gp.dwell_time_ms != null ? `${gp.dwell_time_ms} ms` : 'N/A';
+
+  // ── Game 4: Clock Drawing ─────────────────────────────────
+  const gc4 = g.clockDrawing || {};
+  const clockImg = typeof gc4 === 'string' ? gc4 : (gc4.image || '');
+  document.getElementById('g4TargetTime').innerText    = gc4.target_time || 'N/A';
+  document.getElementById('g4CompletionTime').innerText= gc4.total_completion_time_sec != null ? `${gc4.total_completion_time_sec} s` : 'N/A';
 
   const img = document.getElementById('clockDrawingImage');
   const noMsg = document.getElementById('noClockDrawingMsg');
-  if (g.clockDrawing?.startsWith('data:image')) {
-    img.src = g.clockDrawing; img.style.display = 'inline-block'; noMsg.style.display = 'none';
+  if (clockImg.startsWith('data:image')) {
+    img.src = clockImg; img.style.display = 'inline-block'; noMsg.style.display = 'none';
   } else {
     img.src = ''; img.style.display = 'none'; noMsg.style.display = 'flex';
   }
+
+  // ── Game 5: Colour Stroop ─────────────────────────────────
+  const gs = g.stroop || {};
+  document.getElementById('g5CongruentRT').innerText    = gs.congruent_rt_ms    != null ? `${gs.congruent_rt_ms} ms`    : 'N/A';
+  document.getElementById('g5IncongruentRT').innerText  = gs.incongruent_rt_ms  != null ? `${gs.incongruent_rt_ms} ms`  : 'N/A';
+  document.getElementById('g5InterferenceCost').innerText = gs.interference_cost_ms != null ? `${gs.interference_cost_ms} ms` : 'N/A';
+  document.getElementById('g5IncongruentAcc').innerText = gs.incongruent_accuracy_rate != null ? `${gs.incongruent_accuracy_rate}%` : 'N/A';
+
+  // ── Game 6: Delayed Recall ────────────────────────────────
+  const gr = g.delayedRecall || {};
+  document.getElementById('g6RetentionRate').innerText  = gr.recall_retention_rate != null ? `${gr.recall_retention_rate}%` : 'N/A';
+  document.getElementById('g6IntrusionErrors').innerText= gr.intrusion_error_count ?? 'N/A';
+  document.getElementById('g6RetrievalLatency').innerText= gr.retrieval_latency_ms != null ? `${gr.retrieval_latency_ms} ms` : 'N/A';
+  document.getElementById('g6CorrectCount').innerText   = gr.correct_count  ?? 'N/A';
+  document.getElementById('g6TotalTargets').innerText   = gr.total_targets  ?? 'N/A';
+
+  const fd = record.feedback || {};
+  document.getElementById('repFeedbackEnjoy').innerText = fd.enjoy || 'N/A';
+  document.getElementById('repFeedbackEasy').innerText  = fd.easy  || 'N/A';
+  document.getElementById('repFeedbackNotes').innerText = fd.comments || '—';
 
   overlay.scrollTop = 0;
 }
@@ -962,23 +1066,13 @@ function closeReport() {
   _currentReportIndex = -1;
 }
 
-// ASYNC DB CALL: Update the view status on a specific Supabase row
-async function markCurrentViewed() {
+function markCurrentViewed() {
   if (_currentReportIndex < 0) return;
-  const list = window.cachedAssessments || [];
-  const record = list[_currentReportIndex];
-  
-  if (record && record.id) {
-    const { error } = await supabaseClient
-      .from('assessments')
-      .update({ viewed: true })
-      .eq('id', record.id);
-      
-    if (!error) {
-      record.viewed = true;
-    }
+  const list = JSON.parse(localStorage.getItem('patientAssessments') || '[]');
+  if (list[_currentReportIndex]) {
+    list[_currentReportIndex].viewed = true;
+    localStorage.setItem('patientAssessments', JSON.stringify(list));
   }
-
   const btn = document.getElementById('markViewedBtn');
   if (btn) { btn.innerText = 'Viewed ✓'; btn.classList.add('btn-grey'); }
   renderPatientsTable(list);
@@ -1004,14 +1098,92 @@ window.addEventListener('DOMContentLoaded', () => {
     const nameEl = document.getElementById('welcomeName');
     if (nameEl) nameEl.innerText = `Welcome back, ${userObj.name || userObj.username}!`;
 
+    // Wire skip button
     const skipBtn = document.getElementById('skipBtn');
     if (skipBtn) {
       skipBtn.onclick = function () {
         if (typeof activeGameIndex !== 'undefined' && activeGameIndex === 4 && typeof activeGamePhase !== 'undefined' && activeGamePhase === 'actual') {
-          return; 
+          return; // clock game — must use Submit Clock
         }
         handleSkip();
       };
     }
+  }
+});
+
+// Format memory strings
+function _fmt(val) {
+  return typeof val === 'string' ? val.charAt(0).toUpperCase() + val.slice(1).toLowerCase() : String(val);
+}
+
+function skipStep(step) {
+  switch (step) {
+    case 1:
+      currentAssessmentData.feeling = 'Skipped';
+      currentAssessmentData.timeOfDay = 'Skipped';
+      currentStep = 2; break;
+    case 2:
+      currentAssessmentData.orientation = { date: 'Skipped', month: 'Skipped', year: 'Skipped', day: 'Skipped', location: 'Skipped', city: 'Skipped' };
+      currentStep = 3; break;
+    case 3:
+      currentAssessmentData.naming = { obj1: 'Skipped', obj2: 'Skipped', obj3: 'Skipped', expected: _namingSelected ? _namingSelected.map(i => i.label) : [] };
+      currentStep = 4; break;
+    case 4:
+      currentStep = 5; break;
+    case 5:
+      currentAssessmentData.subtraction.push({ question: `${subCurrentNum}-${subDiff}`, answer: 'Skipped', expected: subCurrentNum - subDiff });
+      currentStep = 6; break;
+    case 6:
+      currentAssessmentData.sentenceRepetition.push({ expected: sentenceRounds[sentenceIndex], typed: 'Skipped' });
+      sentenceIndex++;
+      if (sentenceIndex >= 2) currentStep = 7;
+      break;
+    case 7:
+      currentAssessmentData.verbalFluency = { letter: fluencyLetter, words: ['Skipped'] };
+      currentStep = 8; break;
+    case 8:
+      currentAssessmentData.similarities = 'Skipped';
+      localStorage.setItem('tempAssessmentData', JSON.stringify(currentAssessmentData));
+      currentStep = 8.5; break;
+  }
+  updateAssessmentView();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const stepMappings = [
+    { container: 'stepOrientation', btnId: 'continueStep2' },
+    { container: 'stepNaming', btnId: 'continueStep3' },
+    { container: 'stepSubtraction', btnId: 'continueStep5' },
+    { container: 'stepSentence', btnId: 'continueStep6' },
+    { container: 'stepSimilarities', btnId: 'continueStep8' }
+  ];
+
+  stepMappings.forEach(mapping => {
+    const container = document.getElementById(mapping.container);
+    if (!container) return;
+    const btn = document.getElementById(mapping.btnId);
+    if (!btn) return;
+    
+    container.addEventListener('input', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
+        btn.classList.remove('btn-submit-pending');
+        btn.classList.add('btn-green');
+      }
+    });
+  });
+
+  const step4Btn = document.getElementById('continueStep4');
+  if (step4Btn) {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (!mutation.target.classList.contains('d-none')) {
+           setTimeout(() => {
+             step4Btn.classList.remove('btn-submit-pending');
+             step4Btn.classList.add('btn-green');
+           }, 2000);
+        }
+      });
+    });
+    observer.observe(document.getElementById('stepEncoding'), { attributes: true, attributeFilter: ['class'] });
   }
 });

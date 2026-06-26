@@ -76,7 +76,7 @@ function dText(ctx, txt, x, y, size, weight, color, align) {
 }
 function dEmoji(ctx, emoji, x, y, size) {
   ctx.save();
-  ctx.font = `${size || 22}px serif`;
+  ctx.font = `${size || 22}px "Inter", sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(emoji, x, y);
@@ -488,7 +488,7 @@ function demoGame3(ctx, W, H) {
     // cursor hand
     if (activeIdx >= 0 && activeIdx < nodes.length) {
       const n = nodes[activeIdx];
-      ctx.font = '20px serif';
+      ctx.font = '20px "Inter", sans-serif';
       ctx.fillText('👆', n.x + 14, n.y - 18);
     }
   }
@@ -581,7 +581,7 @@ function demoGame4(ctx, W, H) {
     dCircle(ctx, cx, cy, 4, DM.dark, DM.dark, 1);
 
     // Pencil cursor
-    ctx.font = '18px serif';
+    ctx.font = '18px "Inter", sans-serif';
     ctx.fillText('✏️', cx + R - 6, cy - R + 6);
   }
 
@@ -633,7 +633,7 @@ function demoGame5(ctx, W, H) {
 
     // Word
     ctx.save();
-    ctx.font = `800 52px Lora, Georgia, serif`;
+    ctx.font = `800 52px "Inter", sans-serif`;
     ctx.fillStyle = trial.wordColor;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -805,7 +805,7 @@ const thumbSnapshots = {
     }
     // Dark overlay + play button
     ctx.fillStyle = 'rgba(3,0,34,0.45)'; ctx.fillRect(0, 0, W, H);
-    ctx.font = '22px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = '22px "Inter", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText('▶', W / 2, H / 2);
     dText(ctx, 'Watch how to play', W / 2, H / 2 + 20, 10, 600, 'rgba(255,255,255,0.8)');
   },
@@ -821,7 +821,7 @@ const thumbSnapshots = {
       if (r === 1 && c === 1) dEmoji(ctx, '🐹', x + cW / 2, y + cH / 2, Math.floor(cH * 0.55));
     }
     ctx.fillStyle = 'rgba(3,0,34,0.45)'; ctx.fillRect(0, 0, W, H);
-    ctx.font = '22px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = '22px "Inter", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText('▶', W / 2, H / 2);
     dText(ctx, 'Watch how to play', W / 2, H / 2 + 20, 10, 600, 'rgba(255,255,255,0.8)');
   },
@@ -838,7 +838,7 @@ const thumbSnapshots = {
       dText(ctx, ['1', 'A', '2', 'B', '3'][i], p.x, p.y, 9, 800, DM.dark);
     });
     ctx.fillStyle = 'rgba(3,0,34,0.45)'; ctx.fillRect(0, 0, W, H);
-    ctx.font = '22px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = '22px "Inter", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText('▶', W / 2, H / 2);
     dText(ctx, 'Watch how to play', W / 2, H / 2 + 20, 10, 600, 'rgba(255,255,255,0.8)');
   },
@@ -854,7 +854,7 @@ const thumbSnapshots = {
       dText(ctx, String(n), cx + Math.cos(rad) * (R - 10), cy + Math.sin(rad) * (R - 10), 8, 800, DM.dark);
     });
     ctx.fillStyle = 'rgba(3,0,34,0.45)'; ctx.fillRect(0, 0, W, H);
-    ctx.font = '22px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = '22px "Inter", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText('▶', W / 2, H / 2);
     dText(ctx, 'Watch how to play', W / 2, H / 2 + 20, 10, 600, 'rgba(255,255,255,0.8)');
   },
@@ -862,11 +862,11 @@ const thumbSnapshots = {
     ctx.fillStyle = DM.bg; ctx.fillRect(0, 0, W, H);
     ctx.fillStyle = DM.dark; ctx.fillRect(0, 0, W, 22);
     dText(ctx, '🎨 Colour Word Match', W / 2, 11, 10, 800, DM.white);
-    ctx.font = `800 ${Math.floor(H * 0.28)}px Lora,Georgia,serif`;
+    ctx.font = `800 ${Math.floor(H * 0.28)}px "Inter", sans-serif`;
     ctx.fillStyle = DM.pink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText('GREEN', W / 2, H * 0.5);
     ctx.fillStyle = 'rgba(3,0,34,0.45)'; ctx.fillRect(0, 0, W, H);
-    ctx.font = '22px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = '22px "Inter", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText('▶', W / 2, H / 2);
     dText(ctx, 'Watch how to play', W / 2, H / 2 + 20, 10, 600, 'rgba(255,255,255,0.8)');
   },
@@ -884,7 +884,7 @@ const thumbSnapshots = {
       dEmoji(ctx, e, x + cW / 2, y + cH / 2, Math.floor(cH * 0.55));
     });
     ctx.fillStyle = 'rgba(3,0,34,0.45)'; ctx.fillRect(0, 0, W, H);
-    ctx.font = '22px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = '22px "Inter", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText('▶', W / 2, H / 2);
     dText(ctx, 'Watch how to play', W / 2, H / 2 + 20, 10, 600, 'rgba(255,255,255,0.8)');
   },

@@ -125,58 +125,117 @@
         </div>
       </div>
 
-      <!-- Box 3: Game Scores -->
+      <!-- Box 3: Game Clinical Metrics -->
       <div class="patient-stat-card" style="grid-column:1/-1;">
-        <h4>3. Game Performance</h4>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1.1rem;">
+        <h4>3. Game Performance — Clinical Metrics</h4>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:1.1rem;">
+
+          <!-- Game 1 -->
           <div class="info-box" style="margin-bottom:0;">
-            <div class="info-box-title">Game 1: Flower Memory 🌻</div>
-            <p>Sequence Max: <strong id="game1Seq">N/A</strong></p>
-            <p>Score: <strong id="game1Score">N/A</strong></p>
+            <div class="info-box-title">Game 1: Flower Memory 🌻
+              <span style="font-weight:normal;font-size:.8rem;color:#555;">Visuospatial Working Memory</span>
+            </div>
+            <p>Max Span: <strong id="g1MaxSpan">N/A</strong></p>
+            <p>Accuracy Rate: <strong id="g1AccuracyRate">N/A</strong></p>
+            <p>Encoding Latency (avg): <strong id="g1EncLatency">N/A</strong></p>
+            <p>Sequence Errors: <strong id="g1SeqErrors">N/A</strong></p>
+            <p>Spatial Errors: <strong id="g1SpatialErrors">N/A</strong></p>
           </div>
+
+          <!-- Game 2 -->
           <div class="info-box" style="margin-bottom:0;">
-            <div class="info-box-title">Game 2: Whack-a-Mole 🐹</div>
-            <p>Max Grid: <strong id="game2Grid">N/A</strong></p>
-            <p>Successful Hits: <strong id="game2Score">N/A</strong></p>
-            <p>Mean RT (all phases): <strong id="game2MRT">N/A</strong></p>
-            <p>RT Variance (std dev): <strong id="game2RTV">N/A</strong></p>
-            <p>Omission Errors: <strong id="game2Omission">N/A</strong></p>
-            <p>Commission Errors: <strong id="game2Commission">N/A</strong></p>
-            <p>Recovery Time (post-error RT): <strong id="game2Recovery">N/A</strong></p>
-            <p>Adaptability Drop (5s post-expand): <strong id="game2Adapt">N/A</strong></p>
-            <p>Phase 1 MRT (motor baseline): <strong id="game2P1MRT">N/A</strong></p>
-            <p>Phase 2 MRT (inhibition): <strong id="game2P2MRT">N/A</strong></p>
-            <p>Phase 3 MRT (cognitive load): <strong id="game2P3MRT">N/A</strong></p>
-            <p>Reached 3×3 Grid: <strong id="game2GridExpand">N/A</strong></p>
+            <div class="info-box-title">Game 2: Whack-a-Mole 🐹
+              <span style="font-weight:normal;font-size:.8rem;color:#555;">Processing Speed &amp; Inhibitory Control</span>
+            </div>
+            <p>Mean Hit RT: <strong id="g2MeanRT">N/A</strong></p>
+            <p>RT Variance (std dev): <strong id="g2RTVariance">N/A</strong></p>
+            <p>Omission Errors: <strong id="g2OmissionErrors">N/A</strong></p>
+            <p>Commission Errors: <strong id="g2CommissionErrors">N/A</strong></p>
+            <p style="font-size:.85rem;color:#666;">Hits: <strong id="g2Hits">N/A</strong> / Targets:
+              <strong id="g2Targets">N/A</strong> &nbsp;|&nbsp; Highest Level: <strong id="g2HighestLevel">N/A</strong>
+            </p>
           </div>
+
+          <!-- Game 3 -->
           <div class="info-box" style="margin-bottom:0;">
-            <div class="info-box-title">Game 3: Garden Path 🔗</div>
-            <p>Nodes: <strong id="game3Nodes">N/A</strong></p>
-            <p>Time: <strong id="game3Time">N/A</strong></p>
+            <div class="info-box-title">Game 3: Garden Path 🔗
+              <span style="font-weight:normal;font-size:.8rem;color:#555;">Cognitive Flexibility &amp; Visual Search</span>
+            </div>
+            <p>Total Path Time: <strong id="g3PathTime">N/A</strong></p>
+            <p>Sequence Errors: <strong id="g3SeqErrors">N/A</strong></p>
+            <p>Correction Latency (avg): <strong id="g3CorrLatency">N/A</strong></p>
+            <p>Dwell Time (avg): <strong id="g3DwellTime">N/A</strong></p>
           </div>
+
+          <!-- Game 4 -->
           <div class="info-box" style="margin-bottom:0;">
-            <div class="info-box-title">Game 5: Colour Stroop 🎨</div>
-            <p>Accuracy: <strong id="game5Acc">N/A</strong></p>
-            <p>Avg RT: <strong id="game5RT">N/A</strong></p>
+            <div class="info-box-title">Game 4: Clock Drawing 🕐
+              <span style="font-weight:normal;font-size:.8rem;color:#555;">Executive Function &amp; Visuospatial Org.</span>
+            </div>
+            <p>Target Time: <strong id="g4TargetTime">N/A</strong></p>
+            <p>Completion Time: <strong id="g4CompletionTime">N/A</strong></p>
+            <p style="margin-bottom:.3rem;font-weight:600;">Clinician Scoring:</p>
+            <div style="display:flex;flex-direction:column;gap:.4rem;margin-left:.5rem;">
+              <label style="font-size:.9rem;">Contour Accuracy:
+                <select id="g4ContourAccuracy" class="form-select"
+                  style="margin-left:.4rem;display:inline-block;width:auto;font-size:.9rem;">
+                  <option value="">— Not scored —</option>
+                  <option value="1">1 — Pass (correct shape)</option>
+                  <option value="0">0 — Fail (incorrect shape)</option>
+                </select>
+              </label>
+              <label style="font-size:.9rem;">Number Placement:
+                <select id="g4NumberScore" class="form-select"
+                  style="margin-left:.4rem;display:inline-block;width:auto;font-size:.9rem;">
+                  <option value="">— Not scored —</option>
+                  <option value="2">2 — All correct &amp; evenly spaced</option>
+                  <option value="1">1 — Present but not evenly spaced</option>
+                  <option value="0">0 — Absent or wrong</option>
+                </select>
+              </label>
+              <label style="font-size:.9rem;">Hand Error (degrees):
+                <input type="number" id="g4HandError" class="form-input" placeholder="e.g. 15" min="0" max="360"
+                  style="display:inline-block;width:90px;margin-left:.4rem;font-size:.9rem;">
+              </label>
+            </div>
           </div>
+
+          <!-- Game 5 -->
           <div class="info-box" style="margin-bottom:0;">
-            <div class="info-box-title">Game 6: Delayed Recall 🧠</div>
-            <p>Correct: <strong id="game6Recall">N/A</strong> / 5</p>
-            <p>Distractors: <strong id="game6Distractors">N/A</strong></p>
+            <div class="info-box-title">Game 5: Colour Stroop 🎨
+              <span style="font-weight:normal;font-size:.8rem;color:#555;">Selective Attention &amp; Interference</span>
+            </div>
+            <p>Congruent RT (avg): <strong id="g5CongruentRT">N/A</strong></p>
+            <p>Incongruent RT (avg): <strong id="g5IncongruentRT">N/A</strong></p>
+            <p style="color:#CB448D;">Interference Cost: <strong id="g5InterferenceCost">N/A</strong></p>
+            <p>Incongruent Accuracy: <strong id="g5IncongruentAcc">N/A</strong></p>
           </div>
+
+          <!-- Game 6 -->
+          <div class="info-box" style="margin-bottom:0;">
+            <div class="info-box-title">Game 6: Delayed Recall 🧠
+              <span style="font-weight:normal;font-size:.8rem;color:#555;">Episodic Memory</span>
+            </div>
+            <p>Retention Rate: <strong id="g6RetentionRate">N/A</strong></p>
+            <p>Intrusion Errors: <strong id="g6IntrusionErrors">N/A</strong></p>
+            <p>Retrieval Latency: <strong id="g6RetrievalLatency">N/A</strong></p>
+            <p style="font-size:.85rem;color:#666;">Correct: <strong id="g6CorrectCount">N/A</strong> / <strong id="g6TotalTargets">N/A</strong></p>
+          </div>
+
+          <!-- Patient Feedback -->
           <div class="info-box" style="margin-bottom:0;">
             <div class="info-box-title">Patient Feedback 💬</div>
             <p>Enjoyment: <strong id="repFeedbackEnjoy">N/A</strong></p>
             <p>Clarity: <strong id="repFeedbackEasy">N/A</strong></p>
             <p style="font-style:italic;" id="repFeedbackNotes">—</p>
           </div>
+
         </div>
       </div>
 
-      <!-- Box 4: Clock Drawing -->
+      <!-- Box 4: Clock Drawing Image -->
       <div class="patient-stat-card" style="grid-column:1/-1;text-align:center;">
         <h4>4. Clock Drawing (Game 4)</h4>
-        <p class="mb-2">Target time: <strong>11:10</strong></p>
         <div
           style="display:inline-block;border:var(--border-main);padding:1rem;background:#fff;box-shadow:var(--shadow-main);">
           <div id="noClockDrawingMsg"
@@ -190,7 +249,6 @@
 
     </div><!-- /patient-details-grid -->
   </div><!-- /report-overlay -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script src="js/app.js"></script>
 </body>

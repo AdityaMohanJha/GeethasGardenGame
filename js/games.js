@@ -8,12 +8,12 @@ let gameDifficulty = 'normal';
 
 // Global session logs
 let gameSessionData = {
-  flowerMemory: { maxSeq: 0, score: 0 },
-  whackMole: { maxGrid: '3x3', hits: 0 },
-  gardenPath: { nodes: 0, time: '0 seconds' },
-  clockDrawing: '',
-  stroop: { acc: '0%', rt: '0 seconds' },
-  delayedRecall: { correct: 0, distractors: 0 }
+  flowerMemory:  { max_span: 0, accuracy_rate: 0, encoding_latency_ms: null, sequence_error_count: 0, spatial_error_count: 0 },
+  whackMole:     { mean_hit_rt_ms: null, rt_variance: null, omission_errors: 0, commission_errors: 0 },
+  gardenPath:    { total_path_time_sec: null, sequence_error_count: 0, correction_latency_ms: null, dwell_time_ms: null },
+  clockDrawing:  { image: '', total_completion_time_sec: null, contour_accuracy: null, number_placement_score: null, hand_placement_error_deg: null },
+  stroop:        { congruent_rt_ms: null, incongruent_rt_ms: null, interference_cost_ms: null, incongruent_accuracy_rate: null },
+  delayedRecall: { recall_retention_rate: null, intrusion_error_count: 0, retrieval_latency_ms: null }
 };
 
 // Memory targets (Step 4)
@@ -174,19 +174,31 @@ function transitionFromPracticeToActual() {
 }
 
 let _finishingGame = false;
+let pendingGameCompletion = false;
+
 function finishActiveGame() {
-  if (_finishingGame) return;
+  if (_finishingGame || pendingGameCompletion) return;
   _finishingGame = true;
+  pendingGameCompletion = true;
   localStorage.setItem('tempGameResults', JSON.stringify(gameSessionData));
 
-  // Reset finishing flag after 800ms to allow transition to settle
   setTimeout(() => { _finishingGame = false; }, 800);
 
-  const completedIndex = activeGameIndex; // capture before increment
+  const btn = document.getElementById('globalNextGameBtn');
+  if (btn) {
+    btn.classList.remove('btn-submit-pending');
+    btn.classList.add('btn-green');
+  }
+}
+
+function advanceToNextGame() {
+  if (!pendingGameCompletion) return; 
+  pendingGameCompletion = false;
+  
+  const completedIndex = activeGameIndex;
   activeGameIndex++;
 
   if (activeGameIndex <= 6) {
-    // Show a short congratulatory popup before the next game
     showGameCompletePopup(completedIndex, () => {
       activeGamePhase = 'intro';
       loadGameScreen();
@@ -195,6 +207,19 @@ function finishActiveGame() {
     currentStep = 10;
     if (typeof updateAssessmentView === 'function') updateAssessmentView();
   }
+}
+
+function skipCurrentGame() {
+  if (activeGameIndex === 1) gameSessionData.flowerMemory = { maxSeq: 0, score: 'Skipped' };
+  if (activeGameIndex === 2) gameSessionData.whackMole = { hits: 'Skipped' };
+  if (activeGameIndex === 3) gameSessionData.gardenPath = { time: 'Skipped' };
+  if (activeGameIndex === 4) gameSessionData.clockDrawing = 'Skipped';
+  if (activeGameIndex === 5) gameSessionData.stroop = { acc: 'Skipped' };
+  if (activeGameIndex === 6) gameSessionData.delayedRecall = { correct: 'Skipped' };
+  
+  localStorage.setItem('tempGameResults', JSON.stringify(gameSessionData));
+  pendingGameCompletion = true;
+  advanceToNextGame();
 }
 
 // Short congratulatory popup shown between games
@@ -225,20 +250,27 @@ function showGameCompletePopup(completedGameIndex, onNext) {
     <div style="background:#FAFCF2;border:3px solid #030022;box-shadow:8px 8px 0 rgba(80,80,100,0.25);
                 padding:2rem 2.5rem;max-width:380px;width:90%;text-align:center;animation:popIn .3s cubic-bezier(.36,.07,.19,.97) both;">
       <div style="font-size:2.8rem;margin-bottom:.6rem;">🌻</div>
-      <h3 style="font-family:'Lora',Georgia,serif;margin-bottom:.4rem;">${cheer}</h3>
-      <p style="font-size:1rem;color:#555;margin-bottom:1.5rem;">Game ${completedGameIndex} done — you're getting closer to the end!</p>
-      <button id="gameCompleteNextBtn" class="btn btn-green" style="width:100%;font-size:1rem;">Next Game ➔</button>
+      <h3 style="font-family:'Tenor Sans',sans-serif;margin-bottom:.4rem;">${cheer}</h3>
+      <p style="font-size:1rem;color:#555;margin-bottom:0;">Game ${completedGameIndex} done — you're getting closer to the end!</p>
     </div>`;
 
   document.body.appendChild(overlay);
 
-  document.getElementById('gameCompleteNextBtn').onclick = () => {
+  setTimeout(() => {
     overlay.remove();
     if (onNext) onNext();
-  };
+  }, 1800);
 }
 
 function launchGameEngine() {
+  const bar = document.getElementById('globalGameControlBar');
+  if (bar) bar.classList.remove('d-none');
+  const btn = document.getElementById('globalNextGameBtn');
+  if (btn) {
+    btn.classList.remove('btn-green');
+    btn.classList.add('btn-submit-pending');
+  }
+
   const runners = {
     1: runGame1FlowerMemory,
     2: runGame2WhackMole,
@@ -270,6 +302,14 @@ let g1IsPlayback = false;
 let g1TrialsAtLength = 0;   // attempts at current length (max 2)
 let g1PassesAtLength = 0;   // passes at current length
 let g1MainGameTryIndex = 0; // 0 = first try, 1 = second try at current length
+// Clinical metric accumulators
+let g1TotalAttempts = 0;
+let g1CorrectAttempts = 0;
+let g1SequenceErrors = 0;
+let g1SpatialErrors = 0;
+let g1SeqHideTimestamp = 0;   // performance.now() when playback ends
+let g1FirstTapDone = false;    // whether first tap of current trial was recorded
+let g1EncodingLatencies = [];  // ms from hide to first tap, per trial
 
 // Predefined sequences for the main game.
 // Internally tiles are 0-indexed (data-id 0-8); user labels them 1-9.
@@ -310,6 +350,13 @@ function runGame1FlowerMemory() {
     g1PassesAtLength = 0;
     g1MainGameTryIndex = 0;
     g1BlinkSpeed = 500;
+    // Reset clinical accumulators
+    g1TotalAttempts = 0;
+    g1CorrectAttempts = 0;
+    g1SequenceErrors = 0;
+    g1SpatialErrors = 0;
+    g1EncodingLatencies = [];
+    g1FirstTapDone = false;
     generateNewSequence();
     playFlowerSequence();
   }
@@ -390,6 +437,8 @@ function playFlowerSequence() {
       const t = setTimeout(() => {
         g1IsPlayback = false;
         g1ClickLocked = false;
+        g1FirstTapDone = false;
+        g1SeqHideTimestamp = performance.now();
         setStartCircleLit(true);
         if (indicator) {
           indicator.innerText = 'Your turn!';
@@ -433,11 +482,36 @@ function handleFlowerClick(id) {
 
   g1UserSequence.push(id);
 
+  // Record encoding latency on the very first tap of this trial
+  if (activeGamePhase === 'actual' && !g1FirstTapDone && g1SeqHideTimestamp > 0) {
+    g1EncodingLatencies.push(performance.now() - g1SeqHideTimestamp);
+    g1FirstTapDone = true;
+  }
+
+  // Spatial error: tapped a tile not in the target sequence at all
+  if (activeGamePhase === 'actual' && !g1Sequence.includes(id)) {
+    g1SpatialErrors++;
+  }
+
   // Wait until the user has tapped all tiles before evaluating
   if (g1UserSequence.length < g1Sequence.length) return;
 
   // Full sequence entered — evaluate now
   const isCorrect = g1UserSequence.every((val, i) => val === g1Sequence[i]);
+  // Check for sequence error: correct set of tiles but wrong order
+  if (activeGamePhase === 'actual' && !isCorrect) {
+    const userSet = [...g1UserSequence].sort().join(',');
+    const seqSet  = [...g1Sequence].sort().join(',');
+    if (userSet === seqSet) {
+      g1SequenceErrors++;
+    } else {
+      // Mixed: some spatial, some order — count as spatial
+      g1SpatialErrors++;
+    }
+  }
+  g1TotalAttempts++;
+  if (isCorrect) g1CorrectAttempts++;
+
   g1ClickLocked = true;
   setStartCircleLit(false);
   g1UserSequence = [];
@@ -730,7 +804,7 @@ function showPracticeFailPopup() {
     overlay.innerHTML = `
       <div style="background:#FAFCF2;border:3.05px solid #030022;box-shadow:8px 8px 0 rgba(80,80,100,0.28);padding:2rem 2.5rem;max-width:400px;width:90%;text-align:center;">
         <div style="font-size:2.5rem;margin-bottom:.75rem;">🌸</div>
-        <h3 style="font-family:'Lora',Georgia,serif;margin-bottom:.6rem;">Almost there!</h3>
+        <h3 style="font-family:'Tenor Sans',sans-serif;margin-bottom:.6rem;">Almost there!</h3>
         <p style="margin-bottom:1.5rem;font-size:1.05rem;">Please read the instructions again and give it another try.</p>
         <button id="practiceFailRetryBtn" class="btn btn-blue" style="width:100%;font-size:1rem;">Try Again ➔</button>
       </div>`;
@@ -759,6 +833,25 @@ function handleMainGamePass() {
   g1PassesAtLength = 0;
   g1MainGameTryIndex = 0; // reset to first predefined sequence for new length
 
+  // If we've gone beyond the max defined sequence, end the game gracefully
+  if (!MAIN_GAME_SEQUENCES[g1SequenceLength]) {
+    const accuracyRate = g1TotalAttempts > 0 ? +(g1CorrectAttempts / g1TotalAttempts * 100).toFixed(1) : 0;
+    const avgEncLatency = g1EncodingLatencies.length > 0 ? +(_mean(g1EncodingLatencies)).toFixed(0) : null;
+    gameSessionData.flowerMemory = {
+      max_span: g1SequenceLength - 1,
+      accuracy_rate: accuracyRate,
+      encoding_latency_ms: avgEncLatency,
+      sequence_error_count: g1SequenceErrors,
+      spatial_error_count: g1SpatialErrors
+    };
+    const indicator = document.getElementById('game1StatusIndicator');
+    if (indicator) indicator.classList.add('d-none');
+    setStartCircleLit(false);
+    const te = setTimeout(finishActiveGame, 1500);
+    activeGameTimeouts.push(te);
+    return;
+  }
+
   const t = setTimeout(() => {
     g1ClickLocked = false;
     generateNewSequence();
@@ -773,7 +866,17 @@ function handleMainGameFail() {
 
   if (g1TrialsAtLength >= 2) {
     // Used both tries and neither was correct → end game (rule 5)
-    gameSessionData.flowerMemory = { maxSeq: Math.max(g1SequenceLength - 1, 0), score: g1CurrentScore };
+    const maxSpan = Math.max(g1SequenceLength - 1, 0);
+    const accuracyRate = g1TotalAttempts > 0 ? +(g1CorrectAttempts / g1TotalAttempts * 100).toFixed(1) : 0;
+    const avgEncLatency = g1EncodingLatencies.length > 0
+      ? +(_mean(g1EncodingLatencies)).toFixed(0) : null;
+    gameSessionData.flowerMemory = {
+      max_span: maxSpan,
+      accuracy_rate: accuracyRate,
+      encoding_latency_ms: avgEncLatency,
+      sequence_error_count: g1SequenceErrors,
+      spatial_error_count: g1SpatialErrors
+    };
     const indicator = document.getElementById('game1StatusIndicator');
     if (indicator) indicator.classList.add('d-none');
     setStartCircleLit(false);
@@ -1168,15 +1271,14 @@ function _finishG2Assessment() {
   const avgLevel = g2LevelSustainedArray.length ? _mean(g2LevelSustainedArray) : g2Level;
 
   gameSessionData.whackMole = {
+    mean_hit_rt_ms:  mrt ? +mrt.toFixed(1) : null,
+    rt_variance:     rtv ? +rtv.toFixed(1) : null,
+    omission_errors: g2TotalMissed,
+    commission_errors: g2TotalDistractorClicks,
+    // supplementary context
     hits: g2TotalHits,
-    score: g2Score,
-    mrt: mrt ? +mrt.toFixed(1) : null,
-    rtv: rtv ? +rtv.toFixed(1) : null,
-    accuracy: +accuracy.toFixed(1),
-    distractorErrorRate: +distractorErrorRate.toFixed(1),
-    missRate: +missRate.toFixed(1),
-    highestLevel: g2HighestLevel,
-    avgLevel: +avgLevel.toFixed(1)
+    total_targets: g2TotalTargets,
+    highest_level: g2HighestLevel
   };
 
   // Preserve legacy difficulty heuristic
@@ -1249,6 +1351,12 @@ function whackMole(index) { _handleMolePointerDown(index); }
 let g3Nodes = [];
 let g3CurrentTargetIdx = 0;
 let g3StartTime = null;
+// Clinical metric accumulators
+let g3ErrorCount = 0;
+let g3LastCorrectTime = 0;     // performance.now() of last correct tap
+let g3LastErrorTime = 0;       // performance.now() of last error tap
+let g3CorrectionLatencies = []; // time from error to next correct tap
+let g3DwellTimes = [];          // time between consecutive correct taps
 
 function generateRandomGardenSeq(length) {
   const numbers = ['1','2','3','4','5','6','7','8','9'].sort(() => 0.5 - Math.random());
@@ -1276,6 +1384,12 @@ function runGame3GardenPath() {
 
   g3CurrentTargetIdx = 0;
   g3Nodes = [];
+  // Reset clinical accumulators
+  g3ErrorCount = 0;
+  g3LastCorrectTime = 0;
+  g3LastErrorTime = 0;
+  g3CorrectionLatencies = [];
+  g3DwellTimes = [];
 
   const seqHeader = document.getElementById('game3SequenceHeader');
   if (seqHeader) {
@@ -1331,6 +1445,7 @@ function highlightActiveTrailNode() {
 }
 
 function handleTrailNodeClick(index) {
+  const now = performance.now();
   if (index !== g3CurrentTargetIdx) {
     if (window.GardenAudio) window.GardenAudio.playError();
     const nodeEl = document.getElementById(`trail-node-${index}`);
@@ -1338,12 +1453,30 @@ function handleTrailNodeClick(index) {
       nodeEl.classList.add('shake');
       setTimeout(() => nodeEl.classList.remove('shake'), 400);
     }
+    if (activeGamePhase === 'actual') {
+      g3ErrorCount++;
+      g3LastErrorTime = now;
+    }
     return;
   }
   const nodeEl = document.getElementById(`trail-node-${index}`);
   nodeEl.classList.remove('active-target');
   nodeEl.classList.add('completed');
   if (index > 0) drawTrailLine(g3Nodes[index - 1], g3Nodes[index]);
+
+  if (activeGamePhase === 'actual') {
+    // Correction latency: time from last error to this correct tap
+    if (g3LastErrorTime > 0) {
+      g3CorrectionLatencies.push(now - g3LastErrorTime);
+      g3LastErrorTime = 0;
+    }
+    // Dwell time: time between consecutive correct taps
+    if (g3LastCorrectTime > 0) {
+      g3DwellTimes.push(now - g3LastCorrectTime);
+    }
+    g3LastCorrectTime = now;
+  }
+
   g3CurrentTargetIdx++;
 
   if (g3CurrentTargetIdx < g3Nodes.length) {
@@ -1355,7 +1488,14 @@ function handleTrailNodeClick(index) {
     if (activeGamePhase === 'practice') {
       document.getElementById('nextPhaseBtn').classList.remove('d-none');
     } else {
-      gameSessionData.gardenPath = { nodes: g3Nodes.length, time: `${timeSpent} seconds` };
+      const avgCorrection = g3CorrectionLatencies.length > 0 ? +(_mean(g3CorrectionLatencies)).toFixed(0) : null;
+      const avgDwell = g3DwellTimes.length > 0 ? +(_mean(g3DwellTimes)).toFixed(0) : null;
+      gameSessionData.gardenPath = {
+        total_path_time_sec: timeSpent,
+        sequence_error_count: g3ErrorCount,
+        correction_latency_ms: avgCorrection,
+        dwell_time_ms: avgDwell
+      };
       if (timeSpent > 30) gameDifficulty = 'easy';
       else if (timeSpent < 15) gameDifficulty = 'hard';
       setTimeout(finishActiveGame, 1500);
@@ -1408,6 +1548,8 @@ function runTrailPracticeDemo() {
 let canvas = null, ctx = null, drawing = false;
 let strokesHistory = [], currentStroke = [];
 let canvasGuidesEnabled = false;
+let g4StartTimestamp = 0;   // performance.now() when clock game starts
+let g4TargetTime = '';       // e.g. '11:10'
 
 // Clock times library — format HH:MM
 const clockTimes = ['11:10', '03:00', '09:15', '06:30', '02:25', '07:35', '10:50', '04:20'];
@@ -1417,6 +1559,8 @@ function runGame4ClockDrawing() {
 
   // Show random time in HH:MM format
   const timeStr = clockTimes[Math.floor(Math.random() * clockTimes.length)];
+  g4TargetTime = timeStr;
+  g4StartTimestamp = performance.now();
   const clockDisplay = document.getElementById('clockTimeDisplay');
   if (clockDisplay) clockDisplay.innerText = `Set hands to: ${timeStr}`;
 
@@ -1498,7 +1642,16 @@ function resetCanvas() { strokesHistory = []; drawCanvasGuidelines(); if (window
 
 function submitClockCanvas() {
   const dataURL = canvas.toDataURL('image/png');
-  gameSessionData.clockDrawing = dataURL;
+  const completionSec = g4StartTimestamp > 0 ? +((performance.now() - g4StartTimestamp) / 1000).toFixed(1) : null;
+  gameSessionData.clockDrawing = {
+    image: dataURL,
+    total_completion_time_sec: completionSec,
+    target_time: g4TargetTime,
+    // Manual scoring fields (filled by clinician in doctor report)
+    contour_accuracy: null,
+    number_placement_score: null,
+    hand_placement_error_deg: null
+  };
   if (window.GardenAudio) window.GardenAudio.playSuccess();
   setTimeout(finishActiveGame, 800);
 }
@@ -1517,10 +1670,17 @@ let g5CorrectAnswers = 0, g5ReactionTimes = [];
 let g5StartTime = null, g5TimerTimeout = null;
 let g5TimerLimit = 3000;
 let g5AwaitingAnswer = false; // prevent auto-skip
+// Clinical metric accumulators
+let g5CongruentRTs = [];
+let g5IncongruentRTs = [];
+let g5IncongruentCorrect = 0;
+let g5IncongruentTotal = 0;
+let g5CurrentTrialIsCongruent = false;
 
 function runGame5ColourStroop() {
   document.getElementById('game5StroopWrapper').classList.remove('d-none');
   g5TrialIndex = 0; g5CorrectAnswers = 0; g5ReactionTimes = []; g5AwaitingAnswer = false;
+  g5CongruentRTs = []; g5IncongruentRTs = []; g5IncongruentCorrect = 0; g5IncongruentTotal = 0;
 
   if (activeGamePhase === 'practice') {
     g5MaxTrials = 2;
@@ -1560,13 +1720,20 @@ function nextStroopTrial() {
   if (g5TimerTimeout) clearTimeout(g5TimerTimeout);
 
   if (g5TrialIndex >= g5MaxTrials) {
-    const totalRT = g5ReactionTimes.reduce((a, b) => a + b, 0);
-    const avgRT = g5ReactionTimes.length ? (totalRT / g5ReactionTimes.length / 1000).toFixed(1) : '—';
-    const acc = Math.round((g5CorrectAnswers / g5MaxTrials) * 100);
     if (activeGamePhase === 'practice') {
       document.getElementById('nextPhaseBtn').classList.remove('d-none');
     } else {
-      gameSessionData.stroop = { acc: `${acc}%`, rt: `${avgRT}s` };
+      const congruentAvg  = g5CongruentRTs.length   ? +(_mean(g5CongruentRTs)).toFixed(1)   : null;
+      const incongruentAvg= g5IncongruentRTs.length ? +(_mean(g5IncongruentRTs)).toFixed(1) : null;
+      const interferCost  = (congruentAvg !== null && incongruentAvg !== null) ? +(incongruentAvg - congruentAvg).toFixed(1) : null;
+      const incongruentAcc= g5IncongruentTotal > 0 ? +(g5IncongruentCorrect / g5IncongruentTotal * 100).toFixed(1) : null;
+      const acc = Math.round((g5CorrectAnswers / g5MaxTrials) * 100);
+      gameSessionData.stroop = {
+        congruent_rt_ms:          congruentAvg,
+        incongruent_rt_ms:        incongruentAvg,
+        interference_cost_ms:     interferCost,
+        incongruent_accuracy_rate: incongruentAcc
+      };
       if (acc < 60) gameDifficulty = 'easy'; else if (acc > 85) gameDifficulty = 'hard';
       setTimeout(finishActiveGame, 1500);
     }
@@ -1578,6 +1745,8 @@ function nextStroopTrial() {
   if (activeGamePhase === 'actual' && gameDifficulty === 'hard') {
     while (fontItem.name === wordItem.name) fontItem = g5WordColors[Math.floor(Math.random() * 4)];
   }
+  // Tag trial congruency: congruent if the word name matches the font colour name
+  g5CurrentTrialIsCongruent = (wordItem.name === fontItem.name);
 
   const textEl = document.getElementById('stroopWordText');
   textEl.innerText = wordItem.name;
@@ -1596,11 +1765,21 @@ function submitStroopAnswer(selected, correct) {
   if (!g5AwaitingAnswer) return;
   g5AwaitingAnswer = false;
   if (g5TimerTimeout) clearTimeout(g5TimerTimeout);
-  g5ReactionTimes.push(new Date() - g5StartTime);
+  const rt = new Date() - g5StartTime;
+  g5ReactionTimes.push(rt);
+
+  // Bucket into congruent / incongruent arrays
+  if (g5CurrentTrialIsCongruent) {
+    g5CongruentRTs.push(rt);
+  } else {
+    g5IncongruentRTs.push(rt);
+    g5IncongruentTotal++;
+  }
 
   const isCorrect = (selected === correct);
   if (isCorrect) {
     g5CorrectAnswers++;
+    if (!g5CurrentTrialIsCongruent) g5IncongruentCorrect++;
     if (window.GardenAudio) window.GardenAudio.playSuccess();
   } else {
     if (window.GardenAudio) window.GardenAudio.playError();
@@ -1621,6 +1800,9 @@ function submitStroopAnswer(selected, correct) {
 // ============================================================
 let g6SelectedIndices = [];
 let g6RecallList = [];
+let g6StartTimestamp = 0;       // when grid is rendered
+let g6FirstSelectTimestamp = 0; // time of very first card tap
+let g6FirstSelectDone = false;
 
 function runGame6DelayedRecall() {
   // No practice mode for game 6 — always go straight to actual
@@ -1628,6 +1810,8 @@ function runGame6DelayedRecall() {
   grid.classList.remove('d-none');
   grid.innerHTML = '';
   g6SelectedIndices = [];
+  g6FirstSelectDone = false;
+  g6StartTimestamp = performance.now();
 
   const targets = window._encodingSelected || [];
   const distractors = window._encodingDistractors || [];
@@ -1660,6 +1844,11 @@ function runGame6DelayedRecall() {
 }
 
 function toggleRecallSelection(index, cardEl) {
+  // Record retrieval latency on very first selection
+  if (!g6FirstSelectDone && g6StartTimestamp > 0) {
+    g6FirstSelectTimestamp = performance.now();
+    g6FirstSelectDone = true;
+  }
   const pos = g6SelectedIndices.indexOf(index);
   if (pos > -1) {
     g6SelectedIndices.splice(pos, 1);
@@ -1669,14 +1858,26 @@ function toggleRecallSelection(index, cardEl) {
     g6SelectedIndices.push(index);
     cardEl.classList.add('selected');
   }
-  // No sound for recall card clicks
 }
 
 function evaluateDelayedRecall() {
-  if (g6SelectedIndices.length === 0) { alert('Please select at least one item.'); return; }
+  if (g6SelectedIndices.length === 0) { CustomDialog.alert('Please select at least one item.'); return; }
   const targets = window._encodingSelected || [];
+  const totalTargets = targets.length || 5;
+
   const correctCount = g6SelectedIndices.filter(idx => targets.some(t => t.label === g6RecallList[idx].label)).length;
-  gameSessionData.delayedRecall = { correct: correctCount, distractors: g6RecallList.length - 5 };
+  const intrusionCount = g6SelectedIndices.filter(idx => !targets.some(t => t.label === g6RecallList[idx].label)).length;
+  const retentionRate = +(correctCount / totalTargets * 100).toFixed(1);
+  const retrievalLatency = g6FirstSelectDone ? +(g6FirstSelectTimestamp - g6StartTimestamp).toFixed(0) : null;
+
+  gameSessionData.delayedRecall = {
+    recall_retention_rate:  retentionRate,
+    intrusion_error_count:  intrusionCount,
+    retrieval_latency_ms:   retrievalLatency,
+    // supplementary
+    correct_count: correctCount,
+    total_targets: totalTargets
+  };
 
   if (correctCount >= 3) {
     if (window.GardenAudio) window.GardenAudio.playSuccess();

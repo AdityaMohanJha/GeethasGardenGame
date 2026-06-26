@@ -1,7 +1,7 @@
 /* ============================================================
    Gamified Dementia Screening — Global Stylesheet
    ============================================================ */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Lora:ital,wght@0,400;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Tenor+Sans&display=swap');
 
 /* ============================================================
    Design Tokens
@@ -30,7 +30,7 @@
   --shadow-active: 0px 0px 0px transparent;
 
   --font-sans: 'Inter', sans-serif;
-  --font-serif: 'Lora', Georgia, serif;
+  --font-tenor: 'Tenor Sans', sans-serif;
 
   --navbar-h: 55px;
 }
@@ -64,7 +64,7 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: var(--font-serif);
+  font-family: var(--font-tenor);
   font-weight: 700;
   line-height: 1.2;
   margin-bottom: 0.5rem;
@@ -221,7 +221,7 @@ p {
 }
 
 .logo-text {
-  font-family: var(--font-serif);
+  font-family: var(--font-tenor);
   font-size: 1.15rem;
   font-weight: 800;
   color: var(--primary-dark)
@@ -603,7 +603,7 @@ p {
 }
 
 .login-tagline {
-  font-family: var(--font-serif);
+  font-family: var(--font-tenor);
   font-size: 2.8rem;
   font-weight: 800;
   line-height: 1.15;
@@ -788,7 +788,7 @@ p {
 }
 
 .mascot-name {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-weight: 700;
   font-size: .95rem;
   color: var(--color-pink);
@@ -797,7 +797,7 @@ p {
 
 .mascot-bubble {
   font-size: 1rem;
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   line-height: 1.5;
   color: var(--primary-dark)
 }
@@ -814,7 +814,7 @@ p {
 }
 
 .info-box-title {
-  font-family: var(--font-serif);
+  font-family: var(--font-tenor);
   font-weight: 700;
   color: #CB448D !important;
   margin-bottom: .35rem
@@ -829,7 +829,7 @@ p {
 }
 
 .notification-box-title {
-  font-family: var(--font-serif);
+  font-family: var(--font-tenor);
   font-weight: 700;
   color: var(--color-pink);
   margin-bottom: .35rem
@@ -1176,7 +1176,7 @@ p {
 
 /* Game 5 */
 .stroop-word-display {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: 3.8rem;
   font-weight: 800;
   margin-bottom: 1.5rem;
@@ -1222,7 +1222,7 @@ p {
    ============================================================ */
 .subtraction-display {
   font-size: 2.6rem;
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-weight: 800;
   text-align: center;
   margin: 1.1rem 0;
@@ -1235,7 +1235,7 @@ p {
   box-shadow: var(--shadow-main);
   padding: 1.5rem;
   font-size: 1.6rem;
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   text-align: center;
   margin: 1.25rem 0;
   min-height: 90px;
@@ -1247,7 +1247,7 @@ p {
 
 .fluency-timer {
   font-size: 2.6rem;
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-weight: 800;
   color: var(--color-pink);
   text-align: center;
@@ -1711,7 +1711,7 @@ p {
   top: 0.6rem;
   right: 0.75rem;
   font-size: 1.1rem;
-  font-family: var(--font-serif);
+  font-family: var(--font-tenor);
   font-weight: 800;
   color: var(--color-white);
   background-color: var(--color-pink);
@@ -2046,4 +2046,63 @@ p {
 @keyframes toastOut {
   from { transform: translateX(0);    opacity: 1; }
   to   { transform: translateX(110%); opacity: 0; }
+}
+
+/* ============================================================
+   Custom Dialog
+   ============================================================ */
+.custom-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 0, 34, 0.55);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease forwards;
+}
+.custom-dialog-box {
+  background: #FAFCF2;
+  border: var(--border-main);
+  box-shadow: var(--shadow-main);
+  padding: 1.75rem 2rem;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  animation: popIn 0.3s cubic-bezier(.36,.07,.19,.97) both;
+}
+.custom-dialog-box h3 {
+  font-family: var(--font-tenor);
+  margin-bottom: 0.75rem;
+  color: var(--primary-dark);
+  font-size: 1.4rem;
+}
+.custom-dialog-box p {
+  font-size: 1.05rem;
+  margin-bottom: 1.5rem;
+  color: #444;
+  line-height: 1.5;
+}
+.custom-dialog-buttons {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+.custom-dialog-buttons .btn {
+  flex: 1;
+  padding: 0.6rem 1rem;
+  font-size: 1rem;
+}
+
+/* ============================================================
+   Grey Continue Button State
+   ============================================================ */
+.btn-grey {
+  background-color: #e0e4e8;
+  border-color: #b0b5ba;
+  color: #888c90;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none !important;
+  pointer-events: none;
 }
