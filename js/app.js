@@ -1,7 +1,7 @@
 const SUPABASE_URL = 'https://vtpgtvzzqmrkrbvnyfoi.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ0cGd0dnp6cW1ya3Jidm55Zm9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5MjIwNjAsImV4cCI6MjA5NzQ5ODA2MH0.9H3svBbVNyv24SJh7EVJzGE19mpZRj_AJTmC93m9v_k';
 
-// FIXED: Variable names now exactly match the constants defined above
+// FIXED: Renamed to supabaseClient to prevent collision with window.supabase
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ============================================================
@@ -191,7 +191,7 @@ async function handleAuthSubmit(event) {
   const passwordInput = document.getElementById('authPassword').value;
 
   if (authMode === 'register') {
-    const { data: existingUsers, error: selErr } = await supabase
+    const { data: existingUsers, error: selErr } = await supabaseClient
       .from('users')
       .select('id')
       .eq('username', usernameInput)
@@ -230,7 +230,7 @@ async function handleAuthSubmit(event) {
         contact: document.getElementById('regContact').value.trim()
       };
       
-      const { error: insErr } = await supabase.from('users').insert([newUser]);
+      const { error: insErr } = await supabaseClient.from('users').insert([newUser]);
       if (insErr) { alert('Error registering: ' + insErr.message); return; }
 
       // Keep minimal session active locally for routing
@@ -238,7 +238,7 @@ async function handleAuthSubmit(event) {
       window.location.href = 'doctor.html';
     }
   } else {
-    const { data: users, error } = await supabase
+    const { data: users, error } = await supabaseClient
       .from('users')
       .select('*')
       .eq('username', usernameInput)
@@ -270,7 +270,7 @@ async function handleConsentSubmit(event) {
   }
 
   if (window.tempRegData) {
-    const { error } = await supabase.from('users').insert([window.tempRegData]);
+    const { error } = await supabaseClient.from('users').insert([window.tempRegData]);
     if (error) { alert('Registration failed: ' + error.message); return; }
 
     localStorage.setItem('activeUser', JSON.stringify(window.tempRegData));
@@ -752,7 +752,7 @@ async function submitFeedback(event) {
     feedback: { enjoy: selectedFeedbackEnjoy, easy: selectedFeedbackEasy, comments: document.getElementById('feedbackComments').value.trim() }
   };
 
-  const { error } = await supabase.from('assessments').insert([finalReport]);
+  const { error } = await supabaseClient.from('assessments').insert([finalReport]);
   if (error) {
     console.error('Error saving report to Supabase:', error);
     alert('There was a problem saving your report. Please contact an admin.');
@@ -816,7 +816,7 @@ async function loadDoctorDashboard() {
   const badge = document.getElementById('doctorNameBadge');
   if (badge) badge.innerText = docObj.name || docObj.username;
   
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from('assessments')
     .select('*')
     .order('id', { ascending: false });
@@ -969,7 +969,7 @@ async function markCurrentViewed() {
   const record = list[_currentReportIndex];
   
   if (record && record.id) {
-    const { error } = await supabase
+    const { error } = await supabaseClient
       .from('assessments')
       .update({ viewed: true })
       .eq('id', record.id);
