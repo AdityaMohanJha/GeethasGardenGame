@@ -640,17 +640,17 @@ function startGardenJourney() {
 
 // ── Step 3: Randomised Naming Images ─────────────────────────
 const namingPool = [
-  { src: 'images/naming-key.jpg', label: 'Key' },
-  { src: 'images/naming-pencil.jpg', label: 'Pencil' },
-  { src: 'images/naming-watch.jpg', label: 'Watch' },
-  { src: 'images/dist-apple.jpg', label: 'Apple' },
-  { src: 'images/dist-bicycle.jpg', label: 'Bicycle' },
-  { src: 'images/dist-elephant.jpg', label: 'Elephant' },
-  { src: 'images/dist-keys.jpg', label: 'Keys' },
-  { src: 'images/dist-phone.jpg', label: 'Phone' },
-  { src: 'images/dist-radio.jpg', label: 'Radio' },
-  { src: 'images/dist-umbrella.jpg', label: 'Umbrella' },
-  { src: 'images/dist-watch.jpg', label: 'Watch' },
+  { src: 'images/cat.webp', label: 'Cat' },
+  { src: 'images/dog.webp', label: 'Dog' },
+  { src: 'images/chickem.webp', label: 'Chicken' },
+  { src: 'images/crow.webp', label: 'Crow' },
+  { src: 'images/frog.webp', label: 'Frog' },
+  { src: 'images/gloves.webp', label: 'Gloves' },
+  { src: 'images/shovel.webp', label: 'Shovel' },
+  { src: 'images/carrot.webp', label: 'Carrot' },
+  { src: 'images/grapes.webp', label: 'Grapes' },
+  { src: 'images/apple.webp', label: 'Apple' },
+  { src: 'images/tomato.webp', label: 'Tomato' },
 ];
 let _namingSelected = [];
 
@@ -672,24 +672,21 @@ function initNamingImages() {
 
 // ── Step 4: Randomised Encoding Images ───────────────────────
 const encodingPool = [
-  { src: 'images/recall-basket.jpg', label: 'Basket' },
-  { src: 'images/recall-chai.jpg', label: 'Chai' },
-  { src: 'images/recall-coconut.jpg', label: 'Coconut' },
-  { src: 'images/recall-cow.jpg', label: 'Cow' },
-  { src: 'images/recall-cricket.jpg', label: 'Cricket' },
-  { src: 'images/recall-curry.jpg', label: 'Curry' },
-  { src: 'images/recall-diya.jpg', label: 'Diya' },
-  { src: 'images/recall-feather.jpg', label: 'Feather' },
-  { src: 'images/recall-hibiscus.jpg', label: 'Hibiscus' },
-  { src: 'images/recall-kite.jpg', label: 'Kite' },
-  { src: 'images/recall-lamp.jpg', label: 'Lamp' },
-  { src: 'images/recall-lotus.jpg', label: 'Lotus' },
-  { src: 'images/recall-mango.jpg', label: 'Mango' },
-  { src: 'images/recall-om.jpg', label: 'Om' },
-  { src: 'images/recall-peacock.jpg', label: 'Peacock' },
-  { src: 'images/recall-rickshaw.jpg', label: 'Rickshaw' },
-  { src: 'images/recall-shrine.jpg', label: 'Shrine' },
-  { src: 'images/recall-temple.jpg', label: 'Temple' },
+  { src: 'images/tea.webp', label: 'Tea' },
+  { src: 'images/coconut.webp', label: 'Coconut' },
+  { src: 'images/feather.webp', label: 'Feather' },
+  { src: 'images/lotus.webp', label: 'Lotus' },
+  { src: 'images/mango.webp', label: 'Mango' },
+  { src: 'images/peacock.webp', label: 'Peacock' },
+  { src: 'images/rickshaw.webp', label: 'Rickshaw' },
+  { src: 'images/rainbow.webp', label: 'Rainbow' },
+  { src: 'images/umbrella.webp', label: 'Umbrella' },
+  { src: 'images/lock.webp', label: 'Lock' },
+  { src: 'images/cycle.webp', label: 'Cycle' },
+  { src: 'images/sunflower_recall.webp', label: 'Sunflower' },
+  { src: 'images/car.webp', label: 'Car' },
+  { src: 'images/bus.webp', label: 'Bus' },
+  { src: 'images/butterfly.webp', label: 'Butterfly' },
 ];
 
 function initEncodingImages() {
