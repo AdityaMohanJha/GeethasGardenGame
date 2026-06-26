@@ -8,12 +8,12 @@ let gameDifficulty = 'normal';
 
 // Global session logs
 let gameSessionData = {
-  flowerMemory:  { max_span: 0, accuracy_rate: 0, encoding_latency_ms: null, sequence_error_count: 0, spatial_error_count: 0 },
-  whackMole:     { mean_hit_rt_ms: null, rt_variance: null, omission_errors: 0, commission_errors: 0 },
-  gardenPath:    { total_path_time_sec: null, sequence_error_count: 0, correction_latency_ms: null, dwell_time_ms: null },
-  clockDrawing:  { image: '', total_completion_time_sec: null, contour_accuracy: null, number_placement_score: null, hand_placement_error_deg: null },
-  stroop:        { congruent_rt_ms: null, incongruent_rt_ms: null, interference_cost_ms: null, incongruent_accuracy_rate: null },
-  delayedRecall: { recall_retention_rate: null, intrusion_error_count: 0, retrieval_latency_ms: null }
+  flowerMemory: { maxSeq: 0, score: 0 },
+  whackMole: { maxGrid: '3x3', hits: 0 },
+  gardenPath: { nodes: 0, time: '0 seconds' },
+  clockDrawing: '',
+  stroop: { acc: '0%', rt: '0 seconds' },
+  delayedRecall: { correct: 0, distractors: 0 }
 };
 
 // Memory targets (Step 4)
@@ -115,14 +115,14 @@ function loadGameScreen() {
     if (gth) gth.classList.add('d-none');
 
     const defs = {
-      1: { title: 'Game 1: Flower Memory', emoji: '🌸', desc: 'Watch the flowers light up on the tiles and click them back in the exact same order. The sequence gets longer each round.' },
-      2: { title: 'Game 2: Whack-a-Mole', emoji: '🐹', desc: 'Moles are eating up Geetha\'s garden fruits — hit them as fast as possible to save the garden! Watch out for bees 🐝.' },
-      3: { title: 'Game 3: Garden Path', emoji: '🌿', desc: 'Help Geetha cross the garden path! Connect the numbered and lettered stones in the order shown — alternating numbers and letters.' },
-      4: { title: 'Game 4: Clock Drawing', emoji: '🕐', desc: 'Draw a clock face on the canvas and set the hands to the time shown. Use the guide circle if you need it, then hit Submit Clock.' },
-      5: { title: 'Game 5: Colour Word Match', emoji: '🎨', desc: 'A colour word appears in a different ink colour. Click the button that matches the INK COLOUR — not what the word says!' },
-      6: { title: 'Game 6: Delayed Recall', emoji: '🧠', desc: 'Think back to the 5 items you memorised in Step 4. Select exactly those 5 items from the grid — take your time!' },
+      1: { title: 'Game 1: Flower Memory', desc: 'Watch the flowers light up on the tiles and click them back in the exact same order. The sequence gets longer each round.' },
+      2: { title: 'Game 2: Whack-a-Mole', desc: 'Moles are eating up Geetha\'s garden fruits — hit them as fast as possible to save the garden! Watch out for bees.' },
+      3: { title: 'Game 3: Garden Path', desc: 'Help Geetha cross the garden path! Connect the numbered and lettered stones in the order shown — alternating numbers and letters.' },
+      4: { title: 'Game 4: Clock Drawing', desc: 'Draw a clock face on the canvas and set the hands to the time shown. Use the guide circle if you need it, then hit Submit Clock.' },
+      5: { title: 'Game 5: Colour Word Match', desc: 'A colour word appears in a different ink colour. Click the button that matches the INK COLOUR — not what the word says!' },
+      6: { title: 'Game 6: Delayed Recall', desc: 'Think back to the 5 items you memorised in Step 4. Select exactly those 5 items from the grid — take your time!' },
     };
-    const d = defs[activeGameIndex] || { title: 'Game', emoji: '🌸', desc: '' };
+    const d = defs[activeGameIndex] || { title: 'Game', desc: '' };
 
     if (titleEl) titleEl.innerText = d.title;
     if (introTitleEl) introTitleEl.innerText = d.title;
@@ -130,7 +130,7 @@ function loadGameScreen() {
     if (goalTitle) goalTitle.innerText = 'How to play:';
 
     const emojiEl = document.getElementById('gameIntroEmoji');
-    if (emojiEl) emojiEl.textContent = d.emoji;
+    if (emojiEl) { emojiEl.textContent = ''; emojiEl.style.display = 'none'; }
 
     // Wire intro buttons
     const spb = document.getElementById('startPracticeBtn');
@@ -174,31 +174,23 @@ function transitionFromPracticeToActual() {
 }
 
 let _finishingGame = false;
-let pendingGameCompletion = false;
-
 function finishActiveGame() {
-  if (_finishingGame || pendingGameCompletion) return;
+  if (_finishingGame) return;
   _finishingGame = true;
-  pendingGameCompletion = true;
+  
+  const g2Hud = document.getElementById('g2HUD');
+  if (g2Hud) g2Hud.remove();
+
   localStorage.setItem('tempGameResults', JSON.stringify(gameSessionData));
 
+  // Reset finishing flag after 800ms to allow transition to settle
   setTimeout(() => { _finishingGame = false; }, 800);
 
-  const btn = document.getElementById('globalNextGameBtn');
-  if (btn) {
-    btn.classList.remove('btn-submit-pending');
-    btn.classList.add('btn-green');
-  }
-}
-
-function advanceToNextGame() {
-  if (!pendingGameCompletion) return; 
-  pendingGameCompletion = false;
-  
-  const completedIndex = activeGameIndex;
+  const completedIndex = activeGameIndex; // capture before increment
   activeGameIndex++;
 
   if (activeGameIndex <= 6) {
+    // Show a short congratulatory popup before the next game
     showGameCompletePopup(completedIndex, () => {
       activeGamePhase = 'intro';
       loadGameScreen();
@@ -207,19 +199,6 @@ function advanceToNextGame() {
     currentStep = 10;
     if (typeof updateAssessmentView === 'function') updateAssessmentView();
   }
-}
-
-function skipCurrentGame() {
-  if (activeGameIndex === 1) gameSessionData.flowerMemory = { maxSeq: 0, score: 'Skipped' };
-  if (activeGameIndex === 2) gameSessionData.whackMole = { hits: 'Skipped' };
-  if (activeGameIndex === 3) gameSessionData.gardenPath = { time: 'Skipped' };
-  if (activeGameIndex === 4) gameSessionData.clockDrawing = 'Skipped';
-  if (activeGameIndex === 5) gameSessionData.stroop = { acc: 'Skipped' };
-  if (activeGameIndex === 6) gameSessionData.delayedRecall = { correct: 'Skipped' };
-  
-  localStorage.setItem('tempGameResults', JSON.stringify(gameSessionData));
-  pendingGameCompletion = true;
-  advanceToNextGame();
 }
 
 // Short congratulatory popup shown between games
@@ -250,27 +229,20 @@ function showGameCompletePopup(completedGameIndex, onNext) {
     <div style="background:#FAFCF2;border:3px solid #030022;box-shadow:8px 8px 0 rgba(80,80,100,0.25);
                 padding:2rem 2.5rem;max-width:380px;width:90%;text-align:center;animation:popIn .3s cubic-bezier(.36,.07,.19,.97) both;">
       <div style="font-size:2.8rem;margin-bottom:.6rem;">🌻</div>
-      <h3 style="font-family:'Tenor Sans',sans-serif;margin-bottom:.4rem;">${cheer}</h3>
-      <p style="font-size:1rem;color:#555;margin-bottom:0;">Game ${completedGameIndex} done — you're getting closer to the end!</p>
+      <h3 style="font-family:'Lora',Georgia,serif;margin-bottom:.4rem;">${cheer}</h3>
+      <p style="font-size:1rem;color:#555;margin-bottom:1.5rem;">Game ${completedGameIndex} done — you're getting closer to the end!</p>
+      <button id="gameCompleteNextBtn" class="btn btn-green" style="width:100%;font-size:1rem;">Next Game ➔</button>
     </div>`;
 
   document.body.appendChild(overlay);
 
-  setTimeout(() => {
+  document.getElementById('gameCompleteNextBtn').onclick = () => {
     overlay.remove();
     if (onNext) onNext();
-  }, 1800);
+  };
 }
 
 function launchGameEngine() {
-  const bar = document.getElementById('globalGameControlBar');
-  if (bar) bar.classList.remove('d-none');
-  const btn = document.getElementById('globalNextGameBtn');
-  if (btn) {
-    btn.classList.remove('btn-green');
-    btn.classList.add('btn-submit-pending');
-  }
-
   const runners = {
     1: runGame1FlowerMemory,
     2: runGame2WhackMole,
@@ -285,10 +257,8 @@ function launchGameEngine() {
 // ============================================================
 // GAME 1: FLOWER MEMORY
 // ============================================================
-// Practice state
-let g1PracticePhase = 'demo2_observe';  // 'demo2_observe' | 'demo2_cursor' | 'trial2' | 'demo3_observe' | 'demo3_cursor' | 'trial3'
-let g1PracticeTrialCount = 0;   // trials completed in current phase
-let g1PracticePassCount = 0;    // passes in current phase
+let g1PracticeAttemptCount = 0;
+let g1PracticeCurrentLength = 2;
 let g1ClickLocked = false;      // true during playback or post-error gap
 
 // Main game state
@@ -302,14 +272,6 @@ let g1IsPlayback = false;
 let g1TrialsAtLength = 0;   // attempts at current length (max 2)
 let g1PassesAtLength = 0;   // passes at current length
 let g1MainGameTryIndex = 0; // 0 = first try, 1 = second try at current length
-// Clinical metric accumulators
-let g1TotalAttempts = 0;
-let g1CorrectAttempts = 0;
-let g1SequenceErrors = 0;
-let g1SpatialErrors = 0;
-let g1SeqHideTimestamp = 0;   // performance.now() when playback ends
-let g1FirstTapDone = false;    // whether first tap of current trial was recorded
-let g1EncodingLatencies = [];  // ms from hide to first tap, per trial
 
 // Predefined sequences for the main game.
 // Internally tiles are 0-indexed (data-id 0-8); user labels them 1-9.
@@ -342,7 +304,8 @@ function runGame1FlowerMemory() {
   if (indicator) indicator.classList.remove('d-none');
 
   if (activeGamePhase === 'practice') {
-    startDemo2Observe();
+    g1PracticeAttemptCount = 0;
+    startPracticeTrial();
   } else {
     // Main game: start at length 2, 2 trials per length
     g1SequenceLength = 2;
@@ -350,13 +313,6 @@ function runGame1FlowerMemory() {
     g1PassesAtLength = 0;
     g1MainGameTryIndex = 0;
     g1BlinkSpeed = 500;
-    // Reset clinical accumulators
-    g1TotalAttempts = 0;
-    g1CorrectAttempts = 0;
-    g1SequenceErrors = 0;
-    g1SpatialErrors = 0;
-    g1EncodingLatencies = [];
-    g1FirstTapDone = false;
     generateNewSequence();
     playFlowerSequence();
   }
@@ -437,8 +393,6 @@ function playFlowerSequence() {
       const t = setTimeout(() => {
         g1IsPlayback = false;
         g1ClickLocked = false;
-        g1FirstTapDone = false;
-        g1SeqHideTimestamp = performance.now();
         setStartCircleLit(true);
         if (indicator) {
           indicator.innerText = 'Your turn!';
@@ -482,36 +436,11 @@ function handleFlowerClick(id) {
 
   g1UserSequence.push(id);
 
-  // Record encoding latency on the very first tap of this trial
-  if (activeGamePhase === 'actual' && !g1FirstTapDone && g1SeqHideTimestamp > 0) {
-    g1EncodingLatencies.push(performance.now() - g1SeqHideTimestamp);
-    g1FirstTapDone = true;
-  }
-
-  // Spatial error: tapped a tile not in the target sequence at all
-  if (activeGamePhase === 'actual' && !g1Sequence.includes(id)) {
-    g1SpatialErrors++;
-  }
-
   // Wait until the user has tapped all tiles before evaluating
   if (g1UserSequence.length < g1Sequence.length) return;
 
   // Full sequence entered — evaluate now
   const isCorrect = g1UserSequence.every((val, i) => val === g1Sequence[i]);
-  // Check for sequence error: correct set of tiles but wrong order
-  if (activeGamePhase === 'actual' && !isCorrect) {
-    const userSet = [...g1UserSequence].sort().join(',');
-    const seqSet  = [...g1Sequence].sort().join(',');
-    if (userSet === seqSet) {
-      g1SequenceErrors++;
-    } else {
-      // Mixed: some spatial, some order — count as spatial
-      g1SpatialErrors++;
-    }
-  }
-  g1TotalAttempts++;
-  if (isCorrect) g1CorrectAttempts++;
-
   g1ClickLocked = true;
   setStartCircleLit(false);
   g1UserSequence = [];
@@ -536,7 +465,7 @@ function handleFlowerClick(id) {
   } else {
     if (window.GardenAudio) window.GardenAudio.playError();
     if (indicator) {
-      indicator.innerText = 'Uh oh! Let\'s try another time';
+      indicator.innerText = activeGamePhase === 'practice' ? 'Incorrect sequence' : 'Observe carefully';
       indicator.style.color = '#CB448D';
     }
     if (activeGamePhase === 'practice') {
@@ -549,274 +478,48 @@ function handleFlowerClick(id) {
 
 // ── Practice helpers ─────────────────────────────────────────
 
-function startDemo2Observe() {
-  g1PracticePhase = 'demo2_observe';
-  g1PracticeTrialCount = 0;
-  g1PracticePassCount = 0;
-  g1BlinkSpeed = 1000;
-  g1Sequence = [1, 4];
-  playObserveSequence(g1Sequence, 'Watch!', () => startDemo2Cursor());
-}
-
-function startDemo2Cursor() {
-  g1PracticePhase = 'demo2_cursor';
-
-  const indicator = document.getElementById('game1StatusIndicator');
-  if (indicator) {
-    indicator.innerText = 'Start after the blue lights up!';
-    indicator.style.color = '#CB448D';
-  }
-
-  // Wait 1.5 seconds, then light up circle
-  const t1 = setTimeout(() => {
-    setStartCircleLit(true);
-
-    // Wait 800ms, then show cursor and animate clicks
-    const t2 = setTimeout(() => {
-      const cursor = document.getElementById('practiceCursor');
-      if (cursor) {
-        cursor.classList.remove('d-none');
-        cursor.style.top = '50%';
-        cursor.style.left = '50%';
-      }
-
-      animateCursorClicks([1, 4], () => {
-        if (cursor) cursor.classList.add('d-none');
-        setStartCircleLit(false);
-        const t3 = setTimeout(() => {
-          startTrial2();
-        }, 1200);
-        activeGameTimeouts.push(t3);
-      });
-    }, 800);
-    activeGameTimeouts.push(t2);
-  }, 1500);
-  activeGameTimeouts.push(t1);
-}
-
-function startTrial2() {
-  g1PracticePhase = 'trial2';
-  g1PracticeTrialCount = 0;
-  g1PracticePassCount = 0;
-  nextTrial2();
-}
-
-function nextTrial2() {
-  g1UserSequence = [];
-  g1ClickLocked = true;
-  setStartCircleLit(false);
-  g1Sequence = generatePractice2Seq();
-
-  playObserveSequence(g1Sequence, 'Watch!', () => {
-    setStartCircleLit(true);
-    g1ClickLocked = false;
-    g1IsPlayback = false;
+function startPracticeTrial() {
+  if (g1PracticeAttemptCount >= 4) {
+    document.getElementById('nextPhaseBtn').classList.remove('d-none');
     const indicator = document.getElementById('game1StatusIndicator');
     if (indicator) {
-      indicator.innerText = 'Your turn!';
-      indicator.style.color = '#CB448D';
+      indicator.innerText = 'Practice complete!';
+      indicator.style.color = '#34BB72';
     }
-  });
-}
-
-function startDemo3Observe() {
-  g1PracticePhase = 'demo3_observe';
-  g1PracticeTrialCount = 0;
-  g1PracticePassCount = 0;
-  g1BlinkSpeed = 1000;
-  g1Sequence = [2, 5, 7];
-  playObserveSequence(g1Sequence, 'Watch!', () => startDemo3Cursor());
-}
-
-function startDemo3Cursor() {
-  g1PracticePhase = 'demo3_cursor';
-
-  const indicator = document.getElementById('game1StatusIndicator');
-  if (indicator) {
-    indicator.innerText = 'Start after the blue lights up!';
-    indicator.style.color = '#CB448D';
-  }
-
-  // Wait 1.5 seconds, then light up circle
-  const t1 = setTimeout(() => {
-    setStartCircleLit(true);
-
-    // Wait 800ms, then show cursor and animate clicks
-    const t2 = setTimeout(() => {
-      const cursor = document.getElementById('practiceCursor');
-      if (cursor) {
-        cursor.classList.remove('d-none');
-        cursor.style.top = '50%';
-        cursor.style.left = '50%';
-      }
-
-      animateCursorClicks([2, 5, 7], () => {
-        if (cursor) cursor.classList.add('d-none');
-        setStartCircleLit(false);
-        const t3 = setTimeout(() => {
-          startTrial3();
-        }, 1200);
-        activeGameTimeouts.push(t3);
-      });
-    }, 800);
-    activeGameTimeouts.push(t2);
-  }, 1500);
-  activeGameTimeouts.push(t1);
-}
-
-function startTrial3() {
-  g1PracticePhase = 'trial3';
-  g1PracticeTrialCount = 0;
-  g1PracticePassCount = 0;
-  nextTrial3();
-}
-
-function nextTrial3() {
-  g1UserSequence = [];
-  g1ClickLocked = true;
-  setStartCircleLit(false);
-  g1Sequence = generatePractice3Seq();
-
-  playObserveSequence(g1Sequence, 'Watch!', () => {
-    setStartCircleLit(true);
-    g1ClickLocked = false;
-    g1IsPlayback = false;
-    const indicator = document.getElementById('game1StatusIndicator');
-    if (indicator) {
-      indicator.innerText = 'Your turn!';
-      indicator.style.color = '#CB448D';
-    }
-  });
-}
-
-function animateCursorClicks(sequence, callback) {
-  const cursor = document.getElementById('practiceCursor');
-  if (!cursor) {
-    if (callback) callback();
     return;
   }
+  
+  g1PracticeCurrentLength = (g1PracticeAttemptCount < 2) ? 2 : 3;
 
-  let step = 0;
-  function clickNext() {
-    if (step >= sequence.length) {
-      if (callback) callback();
-      return;
+  g1UserSequence = [];
+  g1ClickLocked = true;
+  setStartCircleLit(false);
+  g1BlinkSpeed = 1000;
+
+  g1Sequence = Array.from({ length: g1PracticeCurrentLength }, () => Math.floor(Math.random() * 9));
+
+  playObserveSequence(g1Sequence, 'Watch!', () => {
+    setStartCircleLit(true);
+    g1ClickLocked = false;
+    g1IsPlayback = false;
+    const indicator = document.getElementById('game1StatusIndicator');
+    if (indicator) {
+      indicator.innerText = 'Your turn!';
+      indicator.style.color = '#CB448D';
     }
-
-    const targetId = sequence[step];
-    const btn = document.querySelector(`.flower-btn[data-id="${targetId}"]`);
-    if (!btn) {
-      step++;
-      clickNext();
-      return;
-    }
-
-    const rect = btn.getBoundingClientRect();
-    const parent = document.getElementById('gameContainer').getBoundingClientRect();
-    cursor.style.top = `${rect.top - parent.top + rect.height / 2}px`;
-    cursor.style.left = `${rect.left - parent.left + rect.width / 2}px`;
-
-    const tMove = setTimeout(() => {
-      btn.classList.add('active');
-      btn.innerText = '\uD83C\uDF3B';
-      if (window.GardenAudio) window.GardenAudio.playPop();
-
-      const tHold = setTimeout(() => {
-        btn.classList.remove('active');
-        btn.innerText = '';
-        step++;
-        const tNext = setTimeout(clickNext, 400);
-        activeGameTimeouts.push(tNext);
-      }, 250);
-      activeGameTimeouts.push(tHold);
-    }, 800);
-    activeGameTimeouts.push(tMove);
-  }
-
-  clickNext();
+  });
 }
 
 function handlePracticePass() {
-  g1PracticePassCount++;
-  g1PracticeTrialCount++;
-
-  if (g1PracticePhase === 'trial2') {
-    // Passed 2-tile trial, proceed immediately to 3-tile observe
-    const t = setTimeout(() => startDemo3Observe(), 1000);
-    activeGameTimeouts.push(t);
-  } else if (g1PracticePhase === 'trial3') {
-    // Passed 3-tile trial, enable proceed to main game
-    document.getElementById('nextPhaseBtn').classList.remove('d-none');
-  }
+  g1PracticeAttemptCount++;
+  const t = setTimeout(() => startPracticeTrial(), 1000);
+  activeGameTimeouts.push(t);
 }
 
 function handlePracticeFail() {
-  g1PracticeTrialCount++;
-
-  if (g1PracticePhase === 'trial2') {
-    if (g1PracticeTrialCount >= 3) {
-      if (g1PracticePassCount >= 1) {
-        const t = setTimeout(() => startDemo3Observe(), 1200);
-        activeGameTimeouts.push(t);
-      } else {
-        const t = setTimeout(() => showPracticeFailPopup(), 600);
-        activeGameTimeouts.push(t);
-      }
-    } else {
-      const t = setTimeout(() => nextTrial2(), 1500);
-      activeGameTimeouts.push(t);
-    }
-  } else if (g1PracticePhase === 'trial3') {
-    if (g1PracticeTrialCount >= 3) {
-      if (g1PracticePassCount >= 1) {
-        document.getElementById('nextPhaseBtn').classList.remove('d-none');
-      } else {
-        const t = setTimeout(() => showPracticeFailPopup(), 600);
-        activeGameTimeouts.push(t);
-      }
-    } else {
-      const t = setTimeout(() => nextTrial3(), 1500);
-      activeGameTimeouts.push(t);
-    }
-  }
-}
-
-function generatePractice2Seq() {
-  return [Math.floor(Math.random() * 9), Math.floor(Math.random() * 9)];
-}
-
-function generatePractice3Seq() {
-  return [Math.floor(Math.random() * 9), Math.floor(Math.random() * 9), Math.floor(Math.random() * 9)];
-}
-
-function showPracticeFailPopup() {
-  clearAllGameLoops();
-  // Show a styled in-game notification instead of a browser confirm dialog
-  let overlay = document.getElementById('practiceFailOverlay');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'practiceFailOverlay';
-    overlay.style.cssText = [
-      'position:fixed', 'inset:0', 'z-index:900',
-      'display:flex', 'align-items:center', 'justify-content:center',
-      'background:rgba(3,0,34,0.55)'
-    ].join(';');
-    overlay.innerHTML = `
-      <div style="background:#FAFCF2;border:3.05px solid #030022;box-shadow:8px 8px 0 rgba(80,80,100,0.28);padding:2rem 2.5rem;max-width:400px;width:90%;text-align:center;">
-        <div style="font-size:2.5rem;margin-bottom:.75rem;">🌸</div>
-        <h3 style="font-family:'Tenor Sans',sans-serif;margin-bottom:.6rem;">Almost there!</h3>
-        <p style="margin-bottom:1.5rem;font-size:1.05rem;">Please read the instructions again and give it another try.</p>
-        <button id="practiceFailRetryBtn" class="btn btn-blue" style="width:100%;font-size:1rem;">Try Again ➔</button>
-      </div>`;
-    document.body.appendChild(overlay);
-  } else {
-    overlay.style.display = 'flex';
-  }
-  document.getElementById('practiceFailRetryBtn').onclick = () => {
-    overlay.style.display = 'none';
-    activeGamePhase = 'intro';
-    loadGameScreen();
-  };
+  g1PracticeAttemptCount++;
+  const t = setTimeout(() => startPracticeTrial(), 1500);
+  activeGameTimeouts.push(t);
 }
 
 // ── Main game helpers ─────────────────────────────────────────
@@ -826,30 +529,17 @@ function showPracticeFailPopup() {
 //  5. Both wrong                 → end game
 function handleMainGamePass() {
   g1CurrentScore += 10 * g1SequenceLength;
+  g1TrialsAtLength++;
+  g1PassesAtLength++;
+  g1MainGameTryIndex++;
 
-  // Any correct answer → advance length immediately (rules 3 & 4)
-  g1SequenceLength++;
-  g1TrialsAtLength = 0;
-  g1PassesAtLength = 0;
-  g1MainGameTryIndex = 0; // reset to first predefined sequence for new length
-
-  // If we've gone beyond the max defined sequence, end the game gracefully
-  if (!MAIN_GAME_SEQUENCES[g1SequenceLength]) {
-    const accuracyRate = g1TotalAttempts > 0 ? +(g1CorrectAttempts / g1TotalAttempts * 100).toFixed(1) : 0;
-    const avgEncLatency = g1EncodingLatencies.length > 0 ? +(_mean(g1EncodingLatencies)).toFixed(0) : null;
-    gameSessionData.flowerMemory = {
-      max_span: g1SequenceLength - 1,
-      accuracy_rate: accuracyRate,
-      encoding_latency_ms: avgEncLatency,
-      sequence_error_count: g1SequenceErrors,
-      spatial_error_count: g1SpatialErrors
-    };
-    const indicator = document.getElementById('game1StatusIndicator');
-    if (indicator) indicator.classList.add('d-none');
-    setStartCircleLit(false);
-    const te = setTimeout(finishActiveGame, 1500);
-    activeGameTimeouts.push(te);
-    return;
+  if (g1TrialsAtLength >= 2) {
+    if (g1PassesAtLength >= 1) {
+      g1SequenceLength++;
+      g1TrialsAtLength = 0;
+      g1PassesAtLength = 0;
+      g1MainGameTryIndex = 0;
+    }
   }
 
   const t = setTimeout(() => {
@@ -862,28 +552,32 @@ function handleMainGamePass() {
 
 function handleMainGameFail() {
   g1TrialsAtLength++;
-  g1MainGameTryIndex++; // move to the second predefined sequence for retry
+  g1MainGameTryIndex++;
 
   if (g1TrialsAtLength >= 2) {
-    // Used both tries and neither was correct → end game (rule 5)
-    const maxSpan = Math.max(g1SequenceLength - 1, 0);
-    const accuracyRate = g1TotalAttempts > 0 ? +(g1CorrectAttempts / g1TotalAttempts * 100).toFixed(1) : 0;
-    const avgEncLatency = g1EncodingLatencies.length > 0
-      ? +(_mean(g1EncodingLatencies)).toFixed(0) : null;
-    gameSessionData.flowerMemory = {
-      max_span: maxSpan,
-      accuracy_rate: accuracyRate,
-      encoding_latency_ms: avgEncLatency,
-      sequence_error_count: g1SequenceErrors,
-      spatial_error_count: g1SpatialErrors
-    };
-    const indicator = document.getElementById('game1StatusIndicator');
-    if (indicator) indicator.classList.add('d-none');
-    setStartCircleLit(false);
-    const t = setTimeout(finishActiveGame, 1500);
-    activeGameTimeouts.push(t);
+    if (g1PassesAtLength >= 1) {
+      g1SequenceLength++;
+      g1TrialsAtLength = 0;
+      g1PassesAtLength = 0;
+      g1MainGameTryIndex = 0;
+      
+      const t = setTimeout(() => {
+        g1ClickLocked = false;
+        generateNewSequence();
+        playFlowerSequence();
+      }, 1500);
+      activeGameTimeouts.push(t);
+    } else {
+      // Used both tries and neither was correct → end game
+      gameSessionData.flowerMemory = { maxSeq: Math.max(g1SequenceLength - 1, 0), score: g1CurrentScore };
+      const indicator = document.getElementById('game1StatusIndicator');
+      if (indicator) indicator.classList.add('d-none');
+      setStartCircleLit(false);
+      const t = setTimeout(finishActiveGame, 1500);
+      activeGameTimeouts.push(t);
+    }
   } else {
-    // First try failed → give second try with the alternate predefined sequence
+    // First try completed → give second try
     const t = setTimeout(() => {
       g1ClickLocked = false;
       generateNewSequence();
@@ -997,7 +691,7 @@ function _startPhaseHUD() {
     hud = document.createElement('div');
     hud.id = 'g2HUD';
     hud.style.cssText = `
-      position:fixed;top:90px;left:50%;transform:translateX(-50%);
+      position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
       display:flex;align-items:center;gap:16px;z-index:20;
       background:rgba(255,255,255,0.88);border-radius:24px;
       padding:6px 20px;box-shadow:0 2px 10px rgba(0,0,0,0.12);
@@ -1011,10 +705,8 @@ function _startPhaseHUD() {
     const elapsed = (performance.now() - g2AssessmentStartTime) / 1000;
     const remaining = Math.max(0, 90 - elapsed);
     const secs = Math.ceil(remaining);
-    const phaseEl = document.getElementById('g2HUDPhase');
     const timeEl  = document.getElementById('g2HUDTime');
     const scoreEl = document.getElementById('g2HUDScore');
-    if (phaseEl) phaseEl.textContent = `Level ${g2Level}/4`;
     if (timeEl)  timeEl.textContent  = `${secs}s`;
     if (scoreEl) scoreEl.textContent = `${g2Score}`;
 
@@ -1029,13 +721,11 @@ function _startPhaseHUD() {
 function _updateHUD() {
   const hud = document.getElementById('g2HUD');
   if (!hud) return;
-  if (!document.getElementById('g2HUDTime')) {
-    hud.innerHTML = `
-      <span style="font-size:1.1rem;color:#7a7a7a;font-weight:700;">
-        ⏱ <span id="g2HUDTime" style="color:#c0392b;">90s</span>
-      </span>
-    `;
-  }
+  hud.innerHTML = `
+    <span style="font-size:1.1rem;color:#7a7a7a;">
+      ⏱ <span id="g2HUDTime" style="font-weight:700;color:#c0392b;">90s</span>
+    </span>
+  `;
 }
 
 // ── Grid builder ─────────────────────────────────────────────
@@ -1173,25 +863,35 @@ function _handleMolePointerDown(index) {
     mole.innerText = '🚫';
     if (window.GardenAudio) window.GardenAudio.playError();
     
-    g2TotalDistractorClicks++;
-    g2Score -= (5 * config.multiplier);
+    if (activeGamePhase === 'practice') {
+      _showPhaseFlash("Don't hit the bees!", '#c0392b');
+    } else {
+      g2TotalDistractorClicks++;
+      g2Score -= (5 * config.multiplier);
+    }
   } else {
     mole.innerText = '💥';
     if (window.GardenAudio) window.GardenAudio.playSuccess();
     
-    g2ReactionTimes.push(rt);
-    g2WindowRTs.push(rt);
-    g2TotalHits++;
-    g2WindowHits++;
-    g2Score += (10 * config.multiplier);
+    if (activeGamePhase === 'practice') {
+      _showPhaseFlash("Good job!", '#2d7a4f');
+    } else {
+      g2ReactionTimes.push(rt);
+      g2WindowRTs.push(rt);
+      g2TotalHits++;
+      g2WindowHits++;
+      g2Score += (10 * config.multiplier);
+    }
   }
 
-  const scoreEl = document.getElementById('g2HUDScore');
-  if (scoreEl) scoreEl.textContent = `${g2Score}`;
+  if (activeGamePhase !== 'practice') {
+    const scoreEl = document.getElementById('g2HUDScore');
+    if (scoreEl) scoreEl.textContent = `${g2Score}`;
 
-  // Evaluate after 8 targets
-  if (g2WindowTargets >= 8) {
-    _evaluateWindow();
+    // Evaluate after 8 targets
+    if (g2WindowTargets >= 8) {
+      _evaluateWindow();
+    }
   }
 }
 
@@ -1221,12 +921,7 @@ function _evaluateWindow() {
     _buildMoleLandscape(g2GridSize);
     g2ActiveHoleIdx = -1;
   }
-  
-  if (g2Level > oldLevel) {
-    _showPhaseFlash(`Level ${g2Level}! Faster!`, '#2d7a4f');
-  } else if (g2Level < oldLevel) {
-    _showPhaseFlash(`Level ${g2Level}`, '#c0392b');
-  }
+
   
   _updateHUD();
   
@@ -1256,9 +951,6 @@ function _finishG2Assessment() {
   _hideCurrentEntity();
   clearInterval(g2ClockInterval);
   
-  const timeEl = document.getElementById('g2HUDTime');
-  if (timeEl) timeEl.textContent = '0s';
-  
   if (g2WindowTargets > 0) _evaluateWindow();
 
   const mrt = g2ReactionTimes.length ? _mean(g2ReactionTimes) : null;
@@ -1271,14 +963,15 @@ function _finishG2Assessment() {
   const avgLevel = g2LevelSustainedArray.length ? _mean(g2LevelSustainedArray) : g2Level;
 
   gameSessionData.whackMole = {
-    mean_hit_rt_ms:  mrt ? +mrt.toFixed(1) : null,
-    rt_variance:     rtv ? +rtv.toFixed(1) : null,
-    omission_errors: g2TotalMissed,
-    commission_errors: g2TotalDistractorClicks,
-    // supplementary context
     hits: g2TotalHits,
-    total_targets: g2TotalTargets,
-    highest_level: g2HighestLevel
+    score: g2Score,
+    mrt: mrt ? +mrt.toFixed(1) : null,
+    rtv: rtv ? +rtv.toFixed(1) : null,
+    accuracy: +accuracy.toFixed(1),
+    distractorErrorRate: +distractorErrorRate.toFixed(1),
+    missRate: +missRate.toFixed(1),
+    highestLevel: g2HighestLevel,
+    avgLevel: +avgLevel.toFixed(1)
   };
 
   // Preserve legacy difficulty heuristic
@@ -1298,45 +991,50 @@ function _stdDev(arr) {
 // ── Practice mode (unchanged flow) ────────────────────────────
 function runMolePracticeLoop() {
   const cursor = document.getElementById('practiceCursor');
-  if (cursor) cursor.classList.remove('d-none');
-  let round = 0;
+  if (cursor) cursor.classList.add('d-none');
+  
   _buildMoleLandscape(2);
-  let practiceHits = 0;
-  const interval = setInterval(() => {
+  let activePTimeout = null;
+
+  function practiceSpawn() {
     _hideCurrentEntity();
-    if (round >= 3) { clearInterval(interval); if (cursor) cursor.classList.add('d-none'); return; }
-    g2ActiveHoleIdx = round;
     const landscape = document.getElementById('moleLandscape');
     const holes = landscape?.querySelectorAll('.mole-hole-organic');
-    if (!holes || !holes[g2ActiveHoleIdx]) return;
+    if (!holes || holes.length === 0) return;
+    
+    let idx;
+    do { idx = Math.floor(Math.random() * holes.length); } while (idx === g2ActiveHoleIdx);
+    g2ActiveHoleIdx = idx;
+    
     const mole = holes[g2ActiveHoleIdx].querySelector('.mole-element-organic');
     if (!mole) return;
     mole.classList.remove('hit');
-    mole.innerText = '🐹';
-    mole.dataset.isDistractor = 'false';
+    
+    const isDistractor = Math.random() < 0.3;
+    mole.innerText = isDistractor ? '🐝' : '🐹';
+    mole.dataset.isDistractor = isDistractor ? 'true' : 'false';
     mole.classList.add('up');
     g2SpawnTimestamp = performance.now();
-
-    const rect = holes[g2ActiveHoleIdx].getBoundingClientRect();
-    const parent = document.getElementById('gameContainer').getBoundingClientRect();
-    if (cursor) {
-      cursor.style.top  = `${rect.top  - parent.top  + rect.height / 2}px`;
-      cursor.style.left = `${rect.left - parent.left + rect.width  / 2}px`;
-    }
-
-    const tw = setTimeout(() => {
-      const m2 = holes[g2ActiveHoleIdx]?.querySelector('.mole-element-organic');
-      if (m2 && m2.classList.contains('up') && !m2.classList.contains('hit')) {
-        m2.innerText = '💥'; m2.classList.add('hit');
-        practiceHits++;
-        if (practiceHits >= 2) document.getElementById('nextPhaseBtn')?.classList.remove('d-none');
+    
+    const th = setTimeout(() => {
+      if (mole.classList.contains('up') && !mole.classList.contains('hit') && !isDistractor) {
+        _showPhaseFlash("Hit the mole!", '#c0392b');
       }
-    }, 900);
-    const th = setTimeout(() => mole.classList.remove('up'), 1800);
-    activeGameTimeouts.push(tw, th);
-    round++;
-  }, 2400);
-  activeGameIntervals.push(interval);
+      mole.classList.remove('up');
+      activePTimeout = setTimeout(practiceSpawn, 800);
+      activeGameTimeouts.push(activePTimeout);
+    }, 1500);
+    activeGameTimeouts.push(th);
+  }
+
+  practiceSpawn();
+
+  const mainPTimeout = setTimeout(() => {
+    clearTimeout(activePTimeout);
+    document.getElementById('nextPhaseBtn')?.classList.remove('d-none');
+    _hideCurrentEntity();
+  }, 30000);
+  activeGameTimeouts.push(mainPTimeout);
 }
 
 function _runMolePractice() { runMolePracticeLoop(); }
@@ -1351,12 +1049,9 @@ function whackMole(index) { _handleMolePointerDown(index); }
 let g3Nodes = [];
 let g3CurrentTargetIdx = 0;
 let g3StartTime = null;
-// Clinical metric accumulators
-let g3ErrorCount = 0;
-let g3LastCorrectTime = 0;     // performance.now() of last correct tap
-let g3LastErrorTime = 0;       // performance.now() of last error tap
-let g3CorrectionLatencies = []; // time from error to next correct tap
-let g3DwellTimes = [];          // time between consecutive correct taps
+let g3WrongClicks = 0;
+let g3LastNodeIdx = -1;
+let g3VisitedNodes = [];
 
 function generateRandomGardenSeq(length) {
   const numbers = ['1','2','3','4','5','6','7','8','9'].sort(() => 0.5 - Math.random());
@@ -1384,12 +1079,9 @@ function runGame3GardenPath() {
 
   g3CurrentTargetIdx = 0;
   g3Nodes = [];
-  // Reset clinical accumulators
-  g3ErrorCount = 0;
-  g3LastCorrectTime = 0;
-  g3LastErrorTime = 0;
-  g3CorrectionLatencies = [];
-  g3DwellTimes = [];
+  g3WrongClicks = 0;
+  g3LastNodeIdx = -1;
+  g3VisitedNodes = [];
 
   const seqHeader = document.getElementById('game3SequenceHeader');
   if (seqHeader) {
@@ -1430,14 +1122,12 @@ function runGame3GardenPath() {
 
   highlightActiveTrailNode();
   g3StartTime = new Date();
-
-  if (activeGamePhase === 'practice') runTrailPracticeDemo();
 }
 
 function highlightActiveTrailNode() {
   document.querySelectorAll('.trail-node').forEach(n => n.classList.remove('active-target'));
-  // Practice: soft orange pulse on next target
-  if (activeGamePhase === 'practice') {
+  // Practice: soft orange pulse on next target, ONLY after 2 wrong clicks
+  if (activeGamePhase === 'practice' && g3WrongClicks >= 2) {
     const t = document.getElementById(`trail-node-${g3CurrentTargetIdx}`);
     if (t) t.classList.add('active-target');
   }
@@ -1445,52 +1135,55 @@ function highlightActiveTrailNode() {
 }
 
 function handleTrailNodeClick(index) {
-  const now = performance.now();
-  if (index !== g3CurrentTargetIdx) {
-    if (window.GardenAudio) window.GardenAudio.playError();
-    if (activeGamePhase === 'actual') {
-      g3ErrorCount++;
-      g3LastErrorTime = now;
+  if (activeGamePhase === 'practice') {
+    if (index !== g3CurrentTargetIdx) {
+      if (window.GardenAudio) window.GardenAudio.playError();
+      const nodeEl = document.getElementById(`trail-node-${index}`);
+      if (nodeEl) {
+        nodeEl.classList.add('wrong-pulse');
+        setTimeout(() => nodeEl.classList.remove('wrong-pulse'), 600);
+      }
+      g3WrongClicks++;
+      highlightActiveTrailNode();
+      return;
     }
-    return;
-  }
-  const nodeEl = document.getElementById(`trail-node-${index}`);
-  nodeEl.classList.remove('active-target');
-  nodeEl.classList.add('completed');
-  if (index > 0) drawTrailLine(g3Nodes[index - 1], g3Nodes[index]);
-
-  if (activeGamePhase === 'actual') {
-    // Correction latency: time from last error to this correct tap
-    if (g3LastErrorTime > 0) {
-      g3CorrectionLatencies.push(now - g3LastErrorTime);
-      g3LastErrorTime = 0;
-    }
-    // Dwell time: time between consecutive correct taps
-    if (g3LastCorrectTime > 0) {
-      g3DwellTimes.push(now - g3LastCorrectTime);
-    }
-    g3LastCorrectTime = now;
-  }
-
-  g3CurrentTargetIdx++;
-
-  if (g3CurrentTargetIdx < g3Nodes.length) {
-    if (window.GardenAudio) window.GardenAudio.playPop();
-    highlightActiveTrailNode();
-  } else {
-    if (window.GardenAudio) window.GardenAudio.playSuccess();
-    const timeSpent = Math.round((new Date() - g3StartTime) / 1000);
-    if (activeGamePhase === 'practice') {
-      document.getElementById('nextPhaseBtn').classList.remove('d-none');
+    
+    // Correct click
+    g3WrongClicks = 0;
+    const nodeEl = document.getElementById(`trail-node-${index}`);
+    nodeEl.classList.remove('active-target');
+    nodeEl.classList.add('completed');
+    if (g3CurrentTargetIdx > 0) drawTrailLine(g3Nodes[g3CurrentTargetIdx - 1], g3Nodes[index]);
+    g3CurrentTargetIdx++;
+    
+    if (g3CurrentTargetIdx < g3Nodes.length) {
+      if (window.GardenAudio) window.GardenAudio.playPop();
+      highlightActiveTrailNode();
     } else {
-      const avgCorrection = g3CorrectionLatencies.length > 0 ? +(_mean(g3CorrectionLatencies)).toFixed(0) : null;
-      const avgDwell = g3DwellTimes.length > 0 ? +(_mean(g3DwellTimes)).toFixed(0) : null;
-      gameSessionData.gardenPath = {
-        total_path_time_sec: timeSpent,
-        sequence_error_count: g3ErrorCount,
-        correction_latency_ms: avgCorrection,
-        dwell_time_ms: avgDwell
-      };
+      if (window.GardenAudio) window.GardenAudio.playSuccess();
+      document.getElementById('nextPhaseBtn').classList.remove('d-none');
+    }
+  } else {
+    // Main Game: Open Exploration
+    if (g3VisitedNodes.includes(index)) return; // ignore already visited
+    
+    g3VisitedNodes.push(index);
+    const nodeEl = document.getElementById(`trail-node-${index}`);
+    nodeEl.classList.add('completed');
+    
+    if (g3LastNodeIdx !== -1) {
+      const lastNode = g3Nodes.find(n => n.index === g3LastNodeIdx);
+      const currNode = g3Nodes.find(n => n.index === index);
+      drawTrailLine(lastNode, currNode);
+    }
+    g3LastNodeIdx = index;
+    
+    if (window.GardenAudio) window.GardenAudio.playPop();
+
+    if (g3VisitedNodes.length >= g3Nodes.length) {
+      if (window.GardenAudio) window.GardenAudio.playSuccess();
+      const timeSpent = Math.round((new Date() - g3StartTime) / 1000);
+      gameSessionData.gardenPath = { nodes: g3Nodes.length, time: `${timeSpent} seconds` };
       if (timeSpent > 30) gameDifficulty = 'easy';
       else if (timeSpent < 15) gameDifficulty = 'hard';
       setTimeout(finishActiveGame, 1500);
@@ -1508,43 +1201,12 @@ function drawTrailLine(nodeA, nodeB) {
   svg.appendChild(line);
 }
 
-function runTrailPracticeDemo() {
-  const cursor = document.getElementById('practiceCursor');
-  cursor.classList.remove('d-none');
-  let step = 0;
-  const interval = setInterval(() => {
-    if (step >= g3Nodes.length) {
-      clearInterval(interval);
-      cursor.classList.add('d-none');
-      // Reset for player's turn
-      g3CurrentTargetIdx = 0;
-      document.getElementById('game3SvgLines').innerHTML = '';
-      document.querySelectorAll('.trail-node').forEach(n => { n.className = 'trail-node'; });
-      highlightActiveTrailNode();
-      return;
-    }
-    const node = g3Nodes[step];
-    const gridEl = document.getElementById('game3TrailGrid');
-    const gRect = gridEl.getBoundingClientRect();
-
-    // Use the stored x/y which are already relative to the grid container
-    cursor.style.left = `${node.x}px`;
-    cursor.style.top = `${node.y}px`;
-
-    setTimeout(() => handleTrailNodeClick(step), 400);
-    step++;
-  }, 1400);
-  activeGameIntervals.push(interval);
-}
-
 // ============================================================
 // GAME 4: CLOCK DRAWING
 // ============================================================
 let canvas = null, ctx = null, drawing = false;
 let strokesHistory = [], currentStroke = [];
-let canvasGuidesEnabled = false;
-let g4StartTimestamp = 0;   // performance.now() when clock game starts
-let g4TargetTime = '';       // e.g. '11:10'
+let canvasGuidesEnabled = true;
 
 // Clock times library — format HH:MM
 const clockTimes = ['11:10', '03:00', '09:15', '06:30', '02:25', '07:35', '10:50', '04:20'];
@@ -1554,8 +1216,6 @@ function runGame4ClockDrawing() {
 
   // Show random time in HH:MM format
   const timeStr = clockTimes[Math.floor(Math.random() * clockTimes.length)];
-  g4TargetTime = timeStr;
-  g4StartTimestamp = performance.now();
   const clockDisplay = document.getElementById('clockTimeDisplay');
   if (clockDisplay) clockDisplay.innerText = `Set hands to: ${timeStr}`;
 
@@ -1564,7 +1224,7 @@ function runGame4ClockDrawing() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   strokesHistory = [];
 
-  canvasGuidesEnabled = (gameDifficulty === 'easy');
+  canvasGuidesEnabled = true;
   drawCanvasGuidelines();
 
   canvas.onmousedown = startDrawing;
@@ -1637,16 +1297,7 @@ function resetCanvas() { strokesHistory = []; drawCanvasGuidelines(); if (window
 
 function submitClockCanvas() {
   const dataURL = canvas.toDataURL('image/png');
-  const completionSec = g4StartTimestamp > 0 ? +((performance.now() - g4StartTimestamp) / 1000).toFixed(1) : null;
-  gameSessionData.clockDrawing = {
-    image: dataURL,
-    total_completion_time_sec: completionSec,
-    target_time: g4TargetTime,
-    // Manual scoring fields (filled by clinician in doctor report)
-    contour_accuracy: null,
-    number_placement_score: null,
-    hand_placement_error_deg: null
-  };
+  gameSessionData.clockDrawing = dataURL;
   if (window.GardenAudio) window.GardenAudio.playSuccess();
   setTimeout(finishActiveGame, 800);
 }
@@ -1658,33 +1309,29 @@ const g5WordColors = [
   { name: 'RED', color: '#BB3434' },
   { name: 'BLUE', color: '#0055FF' },
   { name: 'GREEN', color: '#34BB72' },
-  { name: 'PINK', color: '#CB448D' }
+  { name: 'YELLOW', color: '#E8B923' }
 ];
 let g5TrialIndex = 0, g5MaxTrials = 8;
 let g5CorrectAnswers = 0, g5ReactionTimes = [];
 let g5StartTime = null, g5TimerTimeout = null;
 let g5TimerLimit = 3000;
 let g5AwaitingAnswer = false; // prevent auto-skip
-// Clinical metric accumulators
-let g5CongruentRTs = [];
-let g5IncongruentRTs = [];
-let g5IncongruentCorrect = 0;
-let g5IncongruentTotal = 0;
-let g5CurrentTrialIsCongruent = false;
-let g5LastWordName = '';
-let g5LastFontColor = '';
+let g5MainGameSequence = [];
 
 function runGame5ColourStroop() {
   document.getElementById('game5StroopWrapper').classList.remove('d-none');
   g5TrialIndex = 0; g5CorrectAnswers = 0; g5ReactionTimes = []; g5AwaitingAnswer = false;
-  g5CongruentRTs = []; g5IncongruentRTs = []; g5IncongruentCorrect = 0; g5IncongruentTotal = 0;
 
   if (activeGamePhase === 'practice') {
-    g5MaxTrials = 2;
-    g5TimerLimit = 5000;
+    g5MaxTrials = 4;
+    g5TimerLimit = 3000;
   } else {
-    g5MaxTrials = 8;
-    g5TimerLimit = gameDifficulty === 'easy' ? 4500 : gameDifficulty === 'hard' ? 2000 : 3000;
+    g5MaxTrials = 40;
+    g5TimerLimit = 3000;
+    g5MainGameSequence = [];
+    for (let i = 0; i < 20; i++) g5MainGameSequence.push('congruent');
+    for (let i = 0; i < 20; i++) g5MainGameSequence.push('incongruent');
+    g5MainGameSequence.sort(() => Math.random() - 0.5);
   }
 
   const container = document.getElementById('stroopButtonsContainer');
@@ -1693,7 +1340,7 @@ function runGame5ColourStroop() {
     '#BB3434': '#FFC4C4',
     '#0055FF': '#B8D3FF',
     '#34BB72': '#B3F0CC',
-    '#CB448D': '#F9C8E4'
+    '#E8B923': '#FCEBB6'
   };
   g5WordColors.forEach(opt => {
     const btn = document.createElement('button');
@@ -1717,50 +1364,54 @@ function nextStroopTrial() {
   if (g5TimerTimeout) clearTimeout(g5TimerTimeout);
 
   if (g5TrialIndex >= g5MaxTrials) {
+    const totalRT = g5ReactionTimes.reduce((a, b) => a + b, 0);
+    const avgRT = g5ReactionTimes.length ? (totalRT / g5ReactionTimes.length / 1000).toFixed(1) : '—';
+    const acc = Math.round((g5CorrectAnswers / g5MaxTrials) * 100);
     if (activeGamePhase === 'practice') {
       document.getElementById('nextPhaseBtn').classList.remove('d-none');
     } else {
-      const congruentAvg  = g5CongruentRTs.length   ? +(_mean(g5CongruentRTs)).toFixed(1)   : null;
-      const incongruentAvg= g5IncongruentRTs.length ? +(_mean(g5IncongruentRTs)).toFixed(1) : null;
-      const interferCost  = (congruentAvg !== null && incongruentAvg !== null) ? +(incongruentAvg - congruentAvg).toFixed(1) : null;
-      const incongruentAcc= g5IncongruentTotal > 0 ? +(g5IncongruentCorrect / g5IncongruentTotal * 100).toFixed(1) : null;
-      const acc = Math.round((g5CorrectAnswers / g5MaxTrials) * 100);
-      gameSessionData.stroop = {
-        congruent_rt_ms:          congruentAvg,
-        incongruent_rt_ms:        incongruentAvg,
-        interference_cost_ms:     interferCost,
-        incongruent_accuracy_rate: incongruentAcc
-      };
+      gameSessionData.stroop = { acc: `${acc}%`, rt: `${avgRT}s` };
       if (acc < 60) gameDifficulty = 'easy'; else if (acc > 85) gameDifficulty = 'hard';
       setTimeout(finishActiveGame, 1500);
     }
     return;
   }
 
-  let wordItem, fontItem;
-  do {
-    wordItem = g5WordColors[Math.floor(Math.random() * 4)];
-  } while (wordItem.name === g5LastWordName);
+  // Pick word - never repeat the same word twice in a row
+  let wordItem;
+  const lastWordName = document.getElementById('stroopWordText')?.dataset?.lastWord || '';
+  do { wordItem = g5WordColors[Math.floor(Math.random() * 4)]; }
+  while (wordItem.name === lastWordName && g5TrialIndex > 0);
 
-  do {
-    fontItem = g5WordColors[Math.floor(Math.random() * 4)];
-  } while (fontItem.color === g5LastFontColor || (activeGamePhase === 'actual' && gameDifficulty === 'hard' && fontItem.name === wordItem.name));
-
-  g5LastWordName = wordItem.name;
-  g5LastFontColor = fontItem.color;
-  // Tag trial congruency: congruent if the word name matches the font colour name
-  g5CurrentTrialIsCongruent = (wordItem.name === fontItem.name);
+  let fontItem;
+  if (activeGamePhase === 'practice') {
+    // Random incongruent for practice
+    do { fontItem = g5WordColors[Math.floor(Math.random() * 4)]; }
+    while (fontItem.name === wordItem.name);
+  } else {
+    // 50/50 mix for main game
+    if (g5MainGameSequence[g5TrialIndex] === 'congruent') {
+      fontItem = wordItem;
+    } else {
+      do { fontItem = g5WordColors[Math.floor(Math.random() * 4)]; }
+      while (fontItem.name === wordItem.name);
+    }
+  }
 
   const textEl = document.getElementById('stroopWordText');
   textEl.innerText = wordItem.name;
   textEl.style.color = fontItem.color;
   textEl.dataset.correctColor = fontItem.color;
+  textEl.dataset.lastWord = wordItem.name;
 
   g5StartTime = new Date();
   g5AwaitingAnswer = true;
 
   g5TimerTimeout = setTimeout(() => {
     g5ReactionTimes.push(g5TimerLimit);
+    g5AwaitingAnswer = false; // Block late clicks
+    g5TrialIndex++;
+    nextStroopTrial();
   }, g5TimerLimit);
 }
 
@@ -1768,34 +1419,48 @@ function submitStroopAnswer(selected, correct) {
   if (!g5AwaitingAnswer) return;
   g5AwaitingAnswer = false;
   if (g5TimerTimeout) clearTimeout(g5TimerTimeout);
-  const rt = new Date() - g5StartTime;
-  g5ReactionTimes.push(rt);
-
-  // Bucket into congruent / incongruent arrays
-  if (g5CurrentTrialIsCongruent) {
-    g5CongruentRTs.push(rt);
-  } else {
-    g5IncongruentRTs.push(rt);
-    g5IncongruentTotal++;
-  }
+  g5ReactionTimes.push(new Date() - g5StartTime);
 
   const isCorrect = (selected === correct);
   if (isCorrect) {
     g5CorrectAnswers++;
-    if (!g5CurrentTrialIsCongruent) g5IncongruentCorrect++;
     if (window.GardenAudio) window.GardenAudio.playSuccess();
+    if (activeGamePhase === 'practice') {
+      _showStroopFeedback("Correct", '#2d7a4f');
+    }
   } else {
     if (window.GardenAudio) window.GardenAudio.playError();
-    const textEl = document.getElementById('stroopWordText');
-    if (textEl) {
-      textEl.classList.add('shake');
-      setTimeout(() => textEl.classList.remove('shake'), 400);
+    if (activeGamePhase === 'practice') {
+      const correctName = g5WordColors.find(c => c.color === correct)?.name || "that color";
+      _showStroopFeedback(`Wrong. The correct answer is ${correctName}`, '#c0392b');
+    } else {
+      // Gentle visual flash instead of shake
+      const textEl = document.getElementById('stroopWordText');
+      if (textEl) {
+        textEl.classList.add('wrong-pulse');
+        setTimeout(() => textEl.classList.remove('wrong-pulse'), 600);
+      }
     }
   }
 
   g5TrialIndex++;
-  const t = setTimeout(nextStroopTrial, 700);
+  const t = setTimeout(nextStroopTrial, activeGamePhase === 'practice' ? 1000 : 700);
   activeGameTimeouts.push(t);
+}
+
+function _showStroopFeedback(msg, color) {
+  const container = document.getElementById('game5StroopWrapper');
+  const flash = document.createElement('div');
+  flash.textContent = msg;
+  flash.style.cssText = `
+    position:absolute;bottom:5%;left:50%;transform:translate(-50%,0);
+    background:${color};color:#fff;font-size:1.1rem;font-weight:700;
+    padding:10px 28px;border-radius:32px;z-index:30;pointer-events:none;
+    opacity:1;transition:opacity 0.8s;white-space:nowrap;
+  `;
+  container.appendChild(flash);
+  setTimeout(() => { flash.style.opacity = '0'; }, 600);
+  setTimeout(() => flash.remove(), 1400);
 }
 
 // ============================================================
@@ -1803,9 +1468,6 @@ function submitStroopAnswer(selected, correct) {
 // ============================================================
 let g6SelectedIndices = [];
 let g6RecallList = [];
-let g6StartTimestamp = 0;       // when grid is rendered
-let g6FirstSelectTimestamp = 0; // time of very first card tap
-let g6FirstSelectDone = false;
 
 function runGame6DelayedRecall() {
   // No practice mode for game 6 — always go straight to actual
@@ -1813,8 +1475,6 @@ function runGame6DelayedRecall() {
   grid.classList.remove('d-none');
   grid.innerHTML = '';
   g6SelectedIndices = [];
-  g6FirstSelectDone = false;
-  g6StartTimestamp = performance.now();
 
   const targets = window._encodingSelected || [];
   const distractors = window._encodingDistractors || [];
@@ -1847,11 +1507,6 @@ function runGame6DelayedRecall() {
 }
 
 function toggleRecallSelection(index, cardEl) {
-  // Record retrieval latency on very first selection
-  if (!g6FirstSelectDone && g6StartTimestamp > 0) {
-    g6FirstSelectTimestamp = performance.now();
-    g6FirstSelectDone = true;
-  }
   const pos = g6SelectedIndices.indexOf(index);
   if (pos > -1) {
     g6SelectedIndices.splice(pos, 1);
@@ -1861,26 +1516,14 @@ function toggleRecallSelection(index, cardEl) {
     g6SelectedIndices.push(index);
     cardEl.classList.add('selected');
   }
+  // No sound for recall card clicks
 }
 
 function evaluateDelayedRecall() {
-  if (g6SelectedIndices.length === 0) { CustomDialog.alert('Please select at least one item.'); return; }
+  if (g6SelectedIndices.length === 0) { alert('Please select at least one item.'); return; }
   const targets = window._encodingSelected || [];
-  const totalTargets = targets.length || 5;
-
   const correctCount = g6SelectedIndices.filter(idx => targets.some(t => t.label === g6RecallList[idx].label)).length;
-  const intrusionCount = g6SelectedIndices.filter(idx => !targets.some(t => t.label === g6RecallList[idx].label)).length;
-  const retentionRate = +(correctCount / totalTargets * 100).toFixed(1);
-  const retrievalLatency = g6FirstSelectDone ? +(g6FirstSelectTimestamp - g6StartTimestamp).toFixed(0) : null;
-
-  gameSessionData.delayedRecall = {
-    recall_retention_rate:  retentionRate,
-    intrusion_error_count:  intrusionCount,
-    retrieval_latency_ms:   retrievalLatency,
-    // supplementary
-    correct_count: correctCount,
-    total_targets: totalTargets
-  };
+  gameSessionData.delayedRecall = { correct: correctCount, distractors: g6RecallList.length - 5 };
 
   if (correctCount >= 3) {
     if (window.GardenAudio) window.GardenAudio.playSuccess();
