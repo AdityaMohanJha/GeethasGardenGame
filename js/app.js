@@ -1,3 +1,9 @@
+const SUPABASE_URL = 'https://vtpgtvzzqmrkrbvnyfoi.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ0cGd0dnp6cW1ya3Jidm55Zm9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5MjIwNjAsImV4cCI6MjA5NzQ5ODA2MH0.9H3svBbVNyv24SJh7EVJzGE19mpZRj_AJTmC93m9v_k';
+
+// FIXED: Variable names now exactly match the constants defined above
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 // ============================================================
 // App State Management & Core Logic
 // ============================================================
@@ -90,7 +96,6 @@ window.GardenAudio = {
 document.addEventListener('click', (e) => {
   const btn = e.target.closest('.btn');
   if (btn && !btn.disabled && !btn.classList.contains('no-cooldown') && !btn.classList.contains('btn-cooldown-active')) {
-    // Button click sound removed as requested
     btn.classList.add('btn-cooldown-active');
     btn.style.pointerEvents = 'none';
     setTimeout(() => {
@@ -98,54 +103,8 @@ document.addEventListener('click', (e) => {
       btn.style.pointerEvents = '';
     }, 600);
   }
-
 }, true);
 
-
-// ── Database bootstrap ────────────────────────────────────────
-function initDatabase() {
-  if (!localStorage.getItem('usersDB')) {
-    const defaultUsers = [
-      { username: 'rose_gardener', name: 'Grandma Rose', password: 'password123', role: 'patient' },
-      { username: 'dr_sarah', name: 'Dr. Sarah', password: 'password123', role: 'doctor' }
-    ];
-    localStorage.setItem('usersDB', JSON.stringify(defaultUsers));
-  }
-  if (!localStorage.getItem('patientAssessments')) {
-    const dummy = [{
-      username: 'rose_gardener', name: 'Grandma Rose',
-      date: new Date().toLocaleDateString(),
-      viewed: false,
-      preAssessment: {
-        feeling: 'Calm', timeOfDay: 'Evening',
-        orientation: { date: '16', month: 'June', year: '2026', day: 'Tuesday', location: 'Lounge', city: 'Mumbai' },
-        naming: { obj1: 'Apple', obj2: 'Clock', obj3: 'Bicycle' },
-        subtraction: [
-          { question: '88-7', answer: '81', correct: true }, { question: '81-7', answer: '74', correct: true },
-          { question: '74-7', answer: '67', correct: true }, { question: '67-7', answer: '60', correct: true },
-          { question: '60-7', answer: '53', correct: true }
-        ],
-        sentenceRepetition: [
-          { sentence: 'The sunny sunset garden smells of fresh lavender and wet earth.', result: 'Correct' },
-          { sentence: 'Two busy bees carried golden pollen back to the wooden hive.', result: 'Correct' }
-        ],
-        verbalFluency: { letter: 'S', words: ['Sun', 'Sunset', 'Seed', 'Sprout', 'Soil'] },
-        similarities: 'Both are fruits.'
-      },
-      games: {
-        flowerMemory: { maxSeq: 5, score: 120 },
-        whackMole: { maxGrid: '3x3', hits: 14 },
-        gardenPath: { nodes: 6, time: '24 seconds' },
-        stroop: { acc: '92%', rt: '1.2 seconds' },
-        delayedRecall: { correct: 4, distractors: 3 },
-        clockDrawing: ''
-      },
-      feedback: { enjoy: 'Loved them', easy: 'Very Easy', comments: '' }
-    }];
-    localStorage.setItem('patientAssessments', JSON.stringify(dummy));
-  }
-}
-initDatabase();
 
 // ── Auth ──────────────────────────────────────────────────────
 let activeRole = 'patient';
@@ -164,7 +123,6 @@ function updateAuthFields() {
   const tfg = document.getElementById('techFieldGroup');
   const cs = document.getElementById('consentSection');
 
-  // Reset visibility of standard card elements
   const toggleGrp = document.querySelector('.login-toggle-group');
   if (toggleGrp) toggleGrp.classList.remove('d-none');
   if (t) t.classList.remove('d-none');
@@ -225,15 +183,21 @@ function toggleMode(e) {
   updateAuthFields();
 }
 
-function handleAuthSubmit(event) {
+// ASYNC DB CALL: Checking and inserting users in Supabase
+async function handleAuthSubmit(event) {
   event.preventDefault();
   const nameInput = document.getElementById('regName')?.value.trim() || '';
   const usernameInput = document.getElementById('authUsername').value.trim();
   const passwordInput = document.getElementById('authPassword').value;
-  const usersDB = JSON.parse(localStorage.getItem('usersDB') || '[]');
 
   if (authMode === 'register') {
-    if (usersDB.some(u => u.username.toLowerCase() === usernameInput.toLowerCase() && u.role === activeRole)) {
+    const { data: existingUsers, error: selErr } = await supabase
+      .from('users')
+      .select('id')
+      .eq('username', usernameInput)
+      .eq('role', activeRole);
+
+    if (existingUsers && existingUsers.length > 0) {
       alert('An account with that username already exists.'); return;
     }
 
@@ -265,20 +229,37 @@ function handleAuthSubmit(event) {
         gender: document.getElementById('regGender').value.trim(),
         contact: document.getElementById('regContact').value.trim()
       };
-      usersDB.push(newUser);
-      localStorage.setItem('usersDB', JSON.stringify(usersDB));
+      
+      const { error: insErr } = await supabase.from('users').insert([newUser]);
+      if (insErr) { alert('Error registering: ' + insErr.message); return; }
+
+      // Keep minimal session active locally for routing
       localStorage.setItem('activeDoctor', JSON.stringify(newUser));
       window.location.href = 'doctor.html';
     }
   } else {
-    const user = usersDB.find(u => u.username.toLowerCase() === usernameInput.toLowerCase() && u.password === passwordInput && u.role === activeRole);
-    if (!user) { alert('Invalid username or password.'); return; }
-    if (activeRole === 'patient') { localStorage.setItem('activeUser', JSON.stringify(user)); window.location.href = 'patient.html'; }
-    else { localStorage.setItem('activeDoctor', JSON.stringify(user)); window.location.href = 'doctor.html'; }
+    const { data: users, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('username', usernameInput)
+      .eq('password', passwordInput)
+      .eq('role', activeRole);
+
+    if (error || !users || users.length === 0) { alert('Invalid username or password.'); return; }
+    
+    const user = users[0];
+    if (activeRole === 'patient') { 
+        localStorage.setItem('activeUser', JSON.stringify(user)); 
+        window.location.href = 'patient.html'; 
+    } else { 
+        localStorage.setItem('activeDoctor', JSON.stringify(user)); 
+        window.location.href = 'doctor.html'; 
+    }
   }
 }
 
-function handleConsentSubmit(event) {
+// ASYNC DB CALL: Submitting Consent and completing Patient Registration
+async function handleConsentSubmit(event) {
   event.preventDefault();
   const c1 = document.getElementById('consent1').checked;
   const c2 = document.getElementById('consent2').checked;
@@ -289,9 +270,9 @@ function handleConsentSubmit(event) {
   }
 
   if (window.tempRegData) {
-    const usersDB = JSON.parse(localStorage.getItem('usersDB') || '[]');
-    usersDB.push(window.tempRegData);
-    localStorage.setItem('usersDB', JSON.stringify(usersDB));
+    const { error } = await supabase.from('users').insert([window.tempRegData]);
+    if (error) { alert('Registration failed: ' + error.message); return; }
+
     localStorage.setItem('activeUser', JSON.stringify(window.tempRegData));
     delete window.tempRegData;
     window.location.href = 'patient.html';
@@ -320,7 +301,7 @@ function startPreAssessment() {
   updateAssessmentView();
 }
 
-// Back button handler — each step goes to the previous one
+// Back button handler
 function goBack() {
   if (currentStep <= 1) {
     document.getElementById('screenWelcome').style.display = '';
@@ -329,7 +310,6 @@ function goBack() {
     updateProgress(0, 8);
     return;
   }
-  // Handle the fractional step 8.5 → go back to 8
   if (currentStep === 8.5) {
     currentStep = 8;
   } else {
@@ -362,10 +342,10 @@ function updateAssessmentView() {
     updateProgress(currentStep, 8);
     if (skipBtn) skipBtn.classList.remove('d-none');
   } else if (currentStep === 8.5) {
-    updateProgress(8, 8); // all pre-assessment steps complete
+    updateProgress(8, 8); 
     if (skipBtn) skipBtn.classList.add('d-none');
   } else if (currentStep === 9) {
-    updateProgress(6, 6); // games manage their own bar updates via games.js
+    updateProgress(6, 6); 
     if (skipBtn) skipBtn.classList.add('d-none');
   } else {
     updateProgress(0, 0);
@@ -375,7 +355,6 @@ function updateAssessmentView() {
   switch (currentStep) {
     case 1: document.getElementById('stepEmotion').classList.remove('d-none'); break;
     case 2: document.getElementById('stepOrientation').classList.remove('d-none');
-      // Clear fields so autofill cannot pre-populate them
       ['orientDate', 'orientMonth', 'orientYear', 'orientDay'].forEach(id => {
         const el = document.getElementById(id); if (el) el.value = '';
       });
@@ -407,7 +386,6 @@ function updateAssessmentView() {
   }
 }
 
-// Mascot — always hidden (grandma disabled globally)
 function showMascot() {
   const el = document.getElementById('mascotBox');
   if (el) el.classList.remove('d-none');
@@ -633,7 +611,6 @@ function submitStep8() {
   currentStep = 8.5; updateAssessmentView();
 }
 
-// ── Session 1 Complete → Enter Garden ────────────────────────
 function startGardenJourney() {
   currentStep = 9; updateAssessmentView();
 }
@@ -657,7 +634,6 @@ let _namingSelected = [];
 function initNamingImages() {
   const grid = document.getElementById('namingGrid');
   if (!grid) return;
-  // Pick 3 random unique items
   const shuffled = [...namingPool].sort(() => Math.random() - 0.5);
   _namingSelected = shuffled.slice(0, 3);
   grid.innerHTML = _namingSelected.map((item, i) => `
@@ -708,12 +684,10 @@ function initEncodingImages() {
   `).join('');
 }
 
-// ── Skip button ───────────────────────────────────────────────
 function handleSkip() {
   if (currentStep >= 1 && currentStep <= 8) { currentStep++; updateAssessmentView(); }
 }
 
-// ── Modals ────────────────────────────────────────────────────
 function openPauseModal() { document.getElementById('pauseModal').classList.remove('d-none'); }
 function closePauseModal() { document.getElementById('pauseModal').classList.add('d-none'); }
 function closeInfoOverlay() { document.getElementById('infoModal').classList.add('d-none'); }
@@ -754,12 +728,15 @@ function selectFeedbackOption(category, val, el) {
   else selectedFeedbackEasy = val;
 }
 
-function submitFeedback(event) {
+// ASYNC DB CALL: Submit complete screening assessment to Supabase
+async function submitFeedback(event) {
   event.preventDefault();
   if (!selectedFeedbackEnjoy || !selectedFeedbackEasy) { alert('Please answer both survey questions.'); return; }
+  
   const activeUser = JSON.parse(localStorage.getItem('activeUser') || '{}');
   const tempData = JSON.parse(localStorage.getItem('tempAssessmentData') || '{}');
   const gameResults = JSON.parse(localStorage.getItem('tempGameResults') || '{}');
+  
   const finalReport = {
     username: activeUser.username || 'anonymous',
     name: activeUser.name || 'Anonymous',
@@ -774,17 +751,19 @@ function submitFeedback(event) {
     games: gameResults,
     feedback: { enjoy: selectedFeedbackEnjoy, easy: selectedFeedbackEasy, comments: document.getElementById('feedbackComments').value.trim() }
   };
-  const list = JSON.parse(localStorage.getItem('patientAssessments') || '[]');
-  list.push(finalReport);
-  localStorage.setItem('patientAssessments', JSON.stringify(list));
+
+  const { error } = await supabase.from('assessments').insert([finalReport]);
+  if (error) {
+    console.error('Error saving report to Supabase:', error);
+    alert('There was a problem saving your report. Please contact an admin.');
+  }
+
   currentStep = 11; updateAssessmentView();
 }
 
-// ── Congratulations: trophies + falling flowers ───────────────
 function triggerCongratulations() {
   if (window.GardenAudio) window.GardenAudio.playFanfare();
 
-  // Compute performance score 0-5
   const gameResults = JSON.parse(localStorage.getItem('tempGameResults') || '{}');
   let score = 0;
   if (gameResults.flowerMemory && gameResults.flowerMemory.maxSeq >= 4) score++;
@@ -793,7 +772,6 @@ function triggerCongratulations() {
   if (gameResults.stroop && parseInt(gameResults.stroop.acc) >= 70) score++;
   if (gameResults.delayedRecall && gameResults.delayedRecall.correct >= 3) score++;
 
-  // Render trophies
   const trophyRow = document.getElementById('trophyRow');
   if (trophyRow) {
     const filled = '🏆'.repeat(score);
@@ -801,7 +779,6 @@ function triggerCongratulations() {
     trophyRow.innerHTML = `<span style="font-size:2.6rem;">${filled}${empty}</span>`;
   }
 
-  // Falling flowers
   spawnFallingFlowers();
 }
 
@@ -829,14 +806,28 @@ function restartScreening() {
 
 // ── Clinician Dashboard ───────────────────────────────────────
 let _currentReportIndex = -1;
+window.cachedAssessments = [];
 
-function loadDoctorDashboard() {
+// ASYNC DB CALL: Pull all patient assessments from Supabase
+async function loadDoctorDashboard() {
   const activeDoc = localStorage.getItem('activeDoctor');
   if (!activeDoc) { window.location.href = 'index.html'; return; }
   const docObj = JSON.parse(activeDoc);
   const badge = document.getElementById('doctorNameBadge');
   if (badge) badge.innerText = docObj.name || docObj.username;
-  renderPatientsTable(JSON.parse(localStorage.getItem('patientAssessments') || '[]'));
+  
+  const { data, error } = await supabase
+    .from('assessments')
+    .select('*')
+    .order('id', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching assessments:', error);
+  } else {
+    window.cachedAssessments = data || [];
+  }
+  
+  renderPatientsTable(window.cachedAssessments);
 }
 
 function renderPatientsTable(list) {
@@ -868,12 +859,15 @@ function renderPatientsTable(list) {
 
 function filterPatientsList() {
   const q = document.getElementById('patientSearchInput').value.toLowerCase();
-  const list = JSON.parse(localStorage.getItem('patientAssessments') || '[]');
-  renderPatientsTable(list.filter(a => a.name.toLowerCase().includes(q) || a.username.toLowerCase().includes(q)));
+  const list = window.cachedAssessments || [];
+  renderPatientsTable(list.filter(a => 
+      (a.name && a.name.toLowerCase().includes(q)) || 
+      (a.username && a.username.toLowerCase().includes(q))
+  ));
 }
 
 function showPatientReport(index) {
-  const list = JSON.parse(localStorage.getItem('patientAssessments') || '[]');
+  const list = window.cachedAssessments || [];
   const record = list[index];
   if (!record) return;
   _currentReportIndex = index;
@@ -884,7 +878,6 @@ function showPatientReport(index) {
   document.getElementById('reportTitle').innerText = `Report: ${record.name}`;
   document.getElementById('reportDateBadge').innerText = `Date: ${record.date}`;
 
-  // Demographics fields in report
   document.getElementById('repAge').innerText = record.age || 'N/A';
   document.getElementById('repGender').innerText = record.gender || 'N/A';
   document.getElementById('repContact').innerText = record.contact || 'N/A';
@@ -969,13 +962,23 @@ function closeReport() {
   _currentReportIndex = -1;
 }
 
-function markCurrentViewed() {
+// ASYNC DB CALL: Update the view status on a specific Supabase row
+async function markCurrentViewed() {
   if (_currentReportIndex < 0) return;
-  const list = JSON.parse(localStorage.getItem('patientAssessments') || '[]');
-  if (list[_currentReportIndex]) {
-    list[_currentReportIndex].viewed = true;
-    localStorage.setItem('patientAssessments', JSON.stringify(list));
+  const list = window.cachedAssessments || [];
+  const record = list[_currentReportIndex];
+  
+  if (record && record.id) {
+    const { error } = await supabase
+      .from('assessments')
+      .update({ viewed: true })
+      .eq('id', record.id);
+      
+    if (!error) {
+      record.viewed = true;
+    }
   }
+
   const btn = document.getElementById('markViewedBtn');
   if (btn) { btn.innerText = 'Viewed ✓'; btn.classList.add('btn-grey'); }
   renderPatientsTable(list);
@@ -1001,12 +1004,11 @@ window.addEventListener('DOMContentLoaded', () => {
     const nameEl = document.getElementById('welcomeName');
     if (nameEl) nameEl.innerText = `Welcome back, ${userObj.name || userObj.username}!`;
 
-    // Wire skip button
     const skipBtn = document.getElementById('skipBtn');
     if (skipBtn) {
       skipBtn.onclick = function () {
         if (typeof activeGameIndex !== 'undefined' && activeGameIndex === 4 && typeof activeGamePhase !== 'undefined' && activeGamePhase === 'actual') {
-          return; // clock game — must use Submit Clock
+          return; 
         }
         handleSkip();
       };
