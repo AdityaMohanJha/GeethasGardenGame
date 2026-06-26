@@ -791,210 +791,417 @@ function handleMainGameFail() {
 }
 
 // ============================================================
-// GAME 2: WHACK-A-MOLE
+// GAME 2 — WHACK-A-MOLE (90-second Adaptive Level Protocol)
+// 4 adaptive levels based on accuracy and RT
 // ============================================================
-let g2GridSize = 3;
-let g2MoleUpDur = 1200;
-let g2MoleIntMs = 1800;
-let g2MolesShown = 0;
-let g2MaxMoles = 10;
-let g2Hits = 0;
+
+// ── Configuration ────────────────────────────────────────────
+const G2_LEVEL_CONFIG = {
+  1: { grid: 2, freqMs: 2500, visibleMs: 2000, distChance: 0.0, multiplier: 1.0 },
+  2: { grid: 2, freqMs: 2000, visibleMs: 1800, distChance: 0.15, multiplier: 1.5 },
+  3: { grid: 3, freqMs: 1600, visibleMs: 1500, distChance: 0.30, multiplier: 2.0 },
+  4: { grid: 3, freqMs: 1200, visibleMs: 1200, distChance: 0.50, multiplier: 3.0 }
+};
+
+// ── State ────────────────────────────────────────────────────
+let g2Level = 2;            // starts at Level 2
+let g2Score = 0;
+let g2GridSize = 2;         // 2 or 3
 let g2ActiveHoleIdx = -1;
+let g2SpawnTimestamp = 0;
 
+// Metric accumulators (Global)
+let g2ReactionTimes = [];   // all successful hit RTs
+let g2TotalTargets = 0;
+let g2TotalHits = 0;
+let g2TotalMissed = 0;
+let g2TotalDistractors = 0;
+let g2TotalDistractorClicks = 0;
+let g2HighestLevel = 2;
+let g2LevelSustainedArray = [];
+
+// Window trackers
+let g2WindowTargets = 0;
+let g2WindowHits = 0;
+let g2WindowRTs = [];
+let g2WindowStartTime = 0;
+
+// Timer
+let g2AssessmentStartTime = 0;     // performance.now() at game start
+let g2PhaseTimerEl = null;         // DOM element for countdown
+let g2ClockInterval = null;        // setInterval handle for the clock
+let g2SpawnTimeout = null;         // handle for next spawn cycle
+let g2CurrentEntityTimeout = null; // handle to despawn current entity
+
+// Coordinate grids (fixed 120×120 px holes, centred in fixed 600×440 px canvas)
+const G2_COORDS = {
+  2: [
+    { left: 105, top: 70  },
+    { left: 375, top: 70  },
+    { left: 105, top: 250 },
+    { left: 375, top: 250 }
+  ],
+  3: [
+    { left: 60,  top: 30  }, { left: 240, top: 30  }, { left: 420, top: 30  },
+    { left: 60,  top: 160 }, { left: 240, top: 160 }, { left: 420, top: 160 },
+    { left: 60,  top: 290 }, { left: 240, top: 290 }, { left: 420, top: 290 }
+  ]
+};
+
+// ── Entry Point ───────────────────────────────────────────────
 function runGame2WhackMole() {
-  const gameContainer = document.getElementById('gameContainer');
-  gameContainer.classList.add('mole-scene');
+  const gc = document.getElementById('gameContainer');
+  gc.classList.add('mole-scene');
 
-  // Remove old landscape if any
   const oldLnd = document.getElementById('moleLandscape');
   if (oldLnd) oldLnd.remove();
 
-  g2Hits = 0; g2MolesShown = 0; g2ActiveHoleIdx = -1;
+  // Reset all state
+  g2Level = 2;
+  g2Score = 0;
+  g2GridSize = 2;
+  g2ActiveHoleIdx = -1;
+  g2SpawnTimestamp = 0;
+  g2ReactionTimes = [];
+  g2TotalTargets = 0;
+  g2TotalHits = 0;
+  g2TotalMissed = 0;
+  g2TotalDistractors = 0;
+  g2TotalDistractorClicks = 0;
+  g2HighestLevel = 2;
+  g2LevelSustainedArray = [];
+  g2WindowTargets = 0;
+  g2WindowHits = 0;
+  g2WindowRTs = [];
+  g2WindowStartTime = 0;
 
   if (activeGamePhase === 'practice') {
-    g2GridSize = 2; g2MoleUpDur = 1800; g2MoleIntMs = 2400; g2MaxMoles = 4;
-  } else {
-    if (gameDifficulty === 'easy') { g2GridSize = 2; g2MoleUpDur = 1800; g2MoleIntMs = 2500; }
-    else if (gameDifficulty === 'hard') { g2GridSize = 4; g2MoleUpDur = 750; g2MoleIntMs = 1100; }
-    else { g2GridSize = 3; g2MoleUpDur = 1200; g2MoleIntMs = 1800; }
-    g2MaxMoles = 10;
+    _runMolePractice();
+    return;
   }
 
-  // Create new garden landscape element (borderless, fills the available space)
+  _buildMoleLandscape(2);
+  _startPhaseHUD();
+  g2AssessmentStartTime = performance.now();
+  _scheduleNextSpawn();
+}
+
+// ── HUD: Phase banner + countdown ────────────────────────────
+function _startPhaseHUD() {
+  const gc = document.getElementById('gameContainer');
+  let hud = document.getElementById('g2HUD');
+  if (!hud) {
+    hud = document.createElement('div');
+    hud.id = 'g2HUD';
+    hud.style.cssText = `
+      position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+      display:flex;align-items:center;gap:16px;z-index:20;
+      background:rgba(255,255,255,0.88);border-radius:24px;
+      padding:6px 20px;box-shadow:0 2px 10px rgba(0,0,0,0.12);
+      font-family:inherit;pointer-events:none;user-select:none;
+    `;
+    gc.appendChild(hud);
+  }
+  _updateHUD();
+
+  g2ClockInterval = setInterval(() => {
+    const elapsed = (performance.now() - g2AssessmentStartTime) / 1000;
+    const remaining = Math.max(0, 90 - elapsed);
+    const secs = Math.ceil(remaining);
+    const phaseEl = document.getElementById('g2HUDPhase');
+    const timeEl  = document.getElementById('g2HUDTime');
+    const scoreEl = document.getElementById('g2HUDScore');
+    if (phaseEl) phaseEl.textContent = `Level ${g2Level}/4`;
+    if (timeEl)  timeEl.textContent  = `${secs}s`;
+    if (scoreEl) scoreEl.textContent = `${g2Score}`;
+
+    // Check 15-second evaluation window
+    if (g2WindowTargets > 0 && (performance.now() - g2WindowStartTime) >= 15000) {
+      _evaluateWindow();
+    }
+  }, 250);
+  activeGameIntervals.push(g2ClockInterval);
+}
+
+function _updateHUD() {
+  const hud = document.getElementById('g2HUD');
+  if (!hud) return;
+  const phaseLabel = `Score: <span id="g2HUDScore" style="color:#1a6e3c;">${g2Score}</span>`;
+  hud.innerHTML = `
+    <span style="font-size:0.78rem;color:#7a7a7a;font-weight:600;letter-spacing:.04em;">
+      DIFFICULTY <span id="g2HUDPhase" style="color:#2d7a4f;">Level ${g2Level}/4</span>
+    </span>
+    <span style="font-size:0.82rem;font-weight:700;color:#333;">${phaseLabel}</span>
+    <span style="font-size:0.78rem;color:#7a7a7a;">
+      ⏱ <span id="g2HUDTime" style="font-weight:700;color:#c0392b;">90s</span>
+    </span>
+  `;
+}
+
+// ── Grid builder ─────────────────────────────────────────────
+function _buildMoleLandscape(size) {
+  const gc = document.getElementById('gameContainer');
+  const old = document.getElementById('moleLandscape');
+  if (old) old.remove();
+
   const landscape = document.createElement('div');
   landscape.id = 'moleLandscape';
   landscape.className = 'mole-landscape';
+  // Fixed-size canvas centred inside gc
+  landscape.style.cssText = `
+    position:fixed;width:600px;height:440px;
+    left:50%;top:50%;transform:translate(-50%,-50%);
+  `;
 
-  // Add decorative stepping stones to landscape
-  const stones = [
-    { left: '38%', top: '25%' },
-    { left: '42%', top: '55%' },
-    { left: '70%', top: '40%' }
-  ];
-  stones.forEach(st => {
-    const stone = document.createElement('div');
-    stone.className = 'stepping-stone';
-    stone.style.left = st.left;
-    stone.style.top = st.top;
-    landscape.appendChild(stone);
-  });
-
-  // Coordinates mapping for organic layout
-  const coordMap = {
-    2: [
-      { left: '15%', top: '20%' },
-      { left: '70%', top: '15%' },
-      { left: '25%', top: '70%' },
-      { left: '75%', top: '65%' }
-    ],
-    3: [
-      { left: '15%', top: '15%' },
-      { left: '50%', top: '10%' },
-      { left: '82%', top: '20%' },
-      { left: '22%', top: '48%' },
-      { left: '52%', top: '42%' },
-      { left: '80%', top: '52%' },
-      { left: '12%', top: '78%' },
-      { left: '48%', top: '75%' },
-      { left: '84%', top: '82%' }
-    ],
-    4: [
-      { left: '8%', top: '10%' },
-      { left: '33%', top: '8%' },
-      { left: '60%', top: '12%' },
-      { left: '86%', top: '15%' },
-      { left: '15%', top: '35%' },
-      { left: '40%', top: '32%' },
-      { left: '68%', top: '38%' },
-      { left: '90%', top: '40%' },
-      { left: '10%', top: '62%' },
-      { left: '35%', top: '58%' },
-      { left: '62%', top: '65%' },
-      { left: '84%', top: '68%' },
-      { left: '18%', top: '86%' },
-      { left: '45%', top: '84%' },
-      { left: '72%', top: '88%' },
-      { left: '92%', top: '85%' }
-    ]
-  };
-
-  const coords = coordMap[g2GridSize] || coordMap[3];
-  const holeDecors = ['🌱', '🌸', '🍄', '🌿', '🌻', '🍀', '🌱', '🌸', '🍄', '🌿', '🌻', '🍀', '🌱', '🌸', '🍄', '🌿'];
+  const coords = G2_COORDS[size] || G2_COORDS[2];
+  const decors = ['🌱','🌸','🍄','🌿','🌻','🍀','🌾','🌼','🌺'];
 
   for (let i = 0; i < coords.length; i++) {
     const hole = document.createElement('div');
     hole.className = 'mole-hole-organic';
     hole.setAttribute('data-index', i);
-    hole.style.left = coords[i].left;
-    hole.style.top = coords[i].top;
+    // Fixed 120×120 hitboxes, positioned absolutely
+    hole.style.cssText = `
+      position:absolute;width:120px;height:120px;
+      left:${coords[i].left}px;top:${coords[i].top}px;
+    `;
 
-    const rim = document.createElement('div');
-    rim.className = 'soil-rim';
-
-    const pit = document.createElement('div');
-    pit.className = 'soil-pit';
-
-    const mole = document.createElement('div');
-    mole.className = 'mole-element-organic';
+    const rim   = document.createElement('div'); rim.className = 'soil-rim';
+    const pit   = document.createElement('div'); pit.className = 'soil-pit';
+    const mole  = document.createElement('div'); mole.className = 'mole-element-organic';
     mole.innerText = '🐹';
-
-    const decor = document.createElement('div');
-    decor.className = 'hole-decor';
-    decor.innerText = holeDecors[i % holeDecors.length];
 
     hole.appendChild(rim);
     hole.appendChild(pit);
     hole.appendChild(mole);
-    hole.appendChild(decor);
 
-    // Click handler with throttle
-    hole.onclick = (() => { const idx = i; return () => throttledAction(() => whackMole(idx), 300); })();
+    // Use pointerdown for precise timing (avoids mouseup latency)
+    hole.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      _handleMolePointerDown(i);
+    });
     landscape.appendChild(hole);
   }
-
-  gameContainer.appendChild(landscape);
-
-  if (activeGamePhase === 'practice') runMolePracticeLoop();
-  else runMoleActualLoop();
+  gc.appendChild(landscape);
 }
 
-function runMoleActualLoop() {
-  const interval = setInterval(() => {
-    hideAllMoles();
-    if (g2MolesShown >= g2MaxMoles) {
-      clearInterval(interval);
-      gameSessionData.whackMole = { maxGrid: `${g2GridSize}x${g2GridSize}`, hits: g2Hits };
-      if (g2Hits <= 3) gameDifficulty = 'easy';
-      else if (g2Hits >= 8) gameDifficulty = 'hard';
-      setTimeout(finishActiveGame, 1500);
-      return;
-    }
-    showRandomMole();
-  }, g2MoleIntMs);
-  activeGameIntervals.push(interval);
+// ── Spawn cycle ───────────────────────────────────────────────
+function _scheduleNextSpawn() {
+  const elapsed = performance.now() - g2AssessmentStartTime;
+
+  if (elapsed >= 90000) { _finishG2Assessment(); return; }
+
+  const config = G2_LEVEL_CONFIG[g2Level];
+  const gapMs = Math.max(config.freqMs - config.visibleMs, 100);
+
+  g2SpawnTimeout = setTimeout(() => {
+    _hideCurrentEntity();
+    _spawnEntity();
+    
+    // Schedule despawn
+    g2CurrentEntityTimeout = setTimeout(() => {
+      const liveElapsed = performance.now() - g2AssessmentStartTime;
+      if (liveElapsed >= 90000) { _finishG2Assessment(); return; }
+      
+      const landscape = document.getElementById('moleLandscape');
+      const hole = landscape?.querySelector(`.mole-hole-organic[data-index="${g2ActiveHoleIdx}"]`);
+      const moleEl = hole?.querySelector('.mole-element-organic');
+      if (moleEl && moleEl.classList.contains('up') && moleEl.dataset.isDistractor === 'false') {
+        g2TotalMissed++;
+        g2Score -= (2 * config.multiplier);
+        const scoreEl = document.getElementById('g2HUDScore');
+        if (scoreEl) scoreEl.textContent = `${g2Score}`;
+      }
+      _hideCurrentEntity();
+      g2ActiveHoleIdx = -1;
+      _scheduleNextSpawn();
+    }, config.visibleMs);
+    activeGameTimeouts.push(g2CurrentEntityTimeout);
+  }, gapMs);
+  activeGameTimeouts.push(g2SpawnTimeout);
 }
 
-function showRandomMole() {
+function _spawnEntity() {
   const landscape = document.getElementById('moleLandscape');
   const holes = landscape?.querySelectorAll('.mole-hole-organic');
   if (!holes || !holes.length) return;
+
   let idx;
-  do { idx = Math.floor(Math.random() * holes.length); } while (idx === g2ActiveHoleIdx && holes.length > 1);
+  do { idx = Math.floor(Math.random() * holes.length); }
+  while (idx === g2ActiveHoleIdx && holes.length > 1);
   g2ActiveHoleIdx = idx;
+
   const mole = holes[idx].querySelector('.mole-element-organic');
   if (!mole) return;
   mole.classList.remove('hit');
 
-  // 25% chance to spawn a bee distractor
-  const isDistractor = (Math.random() < 0.25);
+  const config = G2_LEVEL_CONFIG[g2Level];
+  const isDistractor = Math.random() < config.distChance;
   mole.innerText = isDistractor ? '🐝' : '🐹';
   mole.dataset.isDistractor = isDistractor ? 'true' : 'false';
-
   mole.classList.add('up');
-  g2MolesShown++;
-  const t = setTimeout(() => mole.classList.remove('up'), g2MoleUpDur);
-  activeGameTimeouts.push(t);
+
+  if (isDistractor) {
+    g2TotalDistractors++;
+  } else {
+    g2TotalTargets++;
+    g2WindowTargets++;
+  }
+
+  g2SpawnTimestamp = performance.now();
+  if (g2WindowTargets === 1) g2WindowStartTime = performance.now();
 }
 
-function hideAllMoles() {
+function _hideCurrentEntity() {
   document.querySelectorAll('.mole-element-organic').forEach(m => m.classList.remove('up'));
 }
 
-function whackMole(index) {
+// ── Input handler ─────────────────────────────────────────────
+function _handleMolePointerDown(index) {
   if (index !== g2ActiveHoleIdx) return;
   const landscape = document.getElementById('moleLandscape');
   const hole = landscape?.querySelector(`.mole-hole-organic[data-index="${index}"]`);
   const mole = hole?.querySelector('.mole-element-organic');
   if (!mole || !mole.classList.contains('up') || mole.classList.contains('hit')) return;
 
+  const rt = performance.now() - g2SpawnTimestamp;
   mole.classList.add('hit');
-  const isDistractor = (mole.dataset.isDistractor === 'true');
+  const isDistractor = mole.dataset.isDistractor === 'true';
+  const config = G2_LEVEL_CONFIG[g2Level];
 
   if (isDistractor) {
     mole.innerText = '🚫';
     if (window.GardenAudio) window.GardenAudio.playError();
-    if (hole) {
-      hole.classList.add('shake');
-      setTimeout(() => hole.classList.remove('shake'), 400);
-    }
-    g2Hits = Math.max(0, g2Hits - 1);
+    
+    g2TotalDistractorClicks++;
+    g2Score -= (5 * config.multiplier);
   } else {
     mole.innerText = '💥';
     if (window.GardenAudio) window.GardenAudio.playSuccess();
-    g2Hits++;
+    
+    g2ReactionTimes.push(rt);
+    g2WindowRTs.push(rt);
+    g2TotalHits++;
+    g2WindowHits++;
+    g2Score += (10 * config.multiplier);
   }
 
-  if (activeGamePhase === 'practice' && g2Hits >= 2) {
-    document.getElementById('nextPhaseBtn').classList.remove('d-none');
+  const scoreEl = document.getElementById('g2HUDScore');
+  if (scoreEl) scoreEl.textContent = `${g2Score}`;
+
+  // Evaluate after 8 targets
+  if (g2WindowTargets >= 8) {
+    _evaluateWindow();
   }
 }
 
+function _evaluateWindow() {
+  if (g2WindowTargets === 0) return;
+  
+  const accuracy = (g2WindowHits / g2WindowTargets) * 100;
+  const avgRT = g2WindowRTs.length > 0 ? (g2WindowRTs.reduce((a,b)=>a+b,0) / g2WindowRTs.length) : 2000;
+  
+  let rtScore = 100 * (2000 - avgRT) / 1500;
+  rtScore = Math.max(0, Math.min(100, rtScore));
+  
+  const performanceScore = (0.7 * accuracy) + (0.3 * rtScore);
+  
+  let oldLevel = g2Level;
+  if (performanceScore >= 80 && g2Level < 4) {
+    g2Level++;
+  } else if (performanceScore <= 55 && g2Level > 1) {
+    g2Level--;
+  }
+  
+  if (g2Level > g2HighestLevel) g2HighestLevel = g2Level;
+  g2LevelSustainedArray.push(g2Level);
+  
+  if (G2_LEVEL_CONFIG[oldLevel].grid !== G2_LEVEL_CONFIG[g2Level].grid) {
+    g2GridSize = G2_LEVEL_CONFIG[g2Level].grid;
+    _buildMoleLandscape(g2GridSize);
+    g2ActiveHoleIdx = -1;
+  }
+  
+  if (g2Level > oldLevel) {
+    _showPhaseFlash(`Level ${g2Level}! Faster!`, '#2d7a4f');
+  } else if (g2Level < oldLevel) {
+    _showPhaseFlash(`Level ${g2Level}`, '#c0392b');
+  }
+  
+  _updateHUD();
+  
+  g2WindowTargets = 0;
+  g2WindowHits = 0;
+  g2WindowRTs = [];
+  g2WindowStartTime = performance.now();
+}
+
+function _showPhaseFlash(msg, color) {
+  const gc = document.getElementById('gameContainer');
+  const flash = document.createElement('div');
+  flash.textContent = msg;
+  flash.style.cssText = `
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    background:${color};color:#fff;font-size:1.1rem;font-weight:700;
+    padding:10px 28px;border-radius:32px;z-index:30;pointer-events:none;
+    opacity:1;transition:opacity 0.8s;
+  `;
+  gc.appendChild(flash);
+  setTimeout(() => { flash.style.opacity = '0'; }, 700);
+  setTimeout(() => flash.remove(), 1550);
+}
+
+// ── Finalise ──────────────────────────────────────────────────
+function _finishG2Assessment() {
+  _hideCurrentEntity();
+  clearInterval(g2ClockInterval);
+  
+  if (g2WindowTargets > 0) _evaluateWindow();
+
+  const mrt = g2ReactionTimes.length ? _mean(g2ReactionTimes) : null;
+  const rtv = g2ReactionTimes.length > 1 ? _stdDev(g2ReactionTimes) : null;
+  
+  const accuracy = g2TotalTargets > 0 ? (g2TotalHits / g2TotalTargets) * 100 : 0;
+  const distractorErrorRate = g2TotalDistractors > 0 ? (g2TotalDistractorClicks / g2TotalDistractors) * 100 : 0;
+  const missRate = g2TotalTargets > 0 ? (g2TotalMissed / g2TotalTargets) * 100 : 0;
+  
+  const avgLevel = g2LevelSustainedArray.length ? _mean(g2LevelSustainedArray) : g2Level;
+
+  gameSessionData.whackMole = {
+    hits: g2TotalHits,
+    score: g2Score,
+    mrt: mrt ? +mrt.toFixed(1) : null,
+    rtv: rtv ? +rtv.toFixed(1) : null,
+    accuracy: +accuracy.toFixed(1),
+    distractorErrorRate: +distractorErrorRate.toFixed(1),
+    missRate: +missRate.toFixed(1),
+    highestLevel: g2HighestLevel,
+    avgLevel: +avgLevel.toFixed(1)
+  };
+
+  // Preserve legacy difficulty heuristic
+  if (g2TotalHits <= 10)      gameDifficulty = 'easy';
+  else if (g2TotalHits >= 25) gameDifficulty = 'hard';
+
+  setTimeout(finishActiveGame, 1500);
+}
+
+// ── Math helpers ──────────────────────────────────────────────
+function _mean(arr) { return arr.reduce((a, b) => a + b, 0) / arr.length; }
+function _stdDev(arr) {
+  const m = _mean(arr);
+  return Math.sqrt(arr.reduce((s, x) => s + (x - m) ** 2, 0) / arr.length);
+}
+
+// ── Practice mode (unchanged flow) ────────────────────────────
 function runMolePracticeLoop() {
   const cursor = document.getElementById('practiceCursor');
   if (cursor) cursor.classList.remove('d-none');
   let round = 0;
+  _buildMoleLandscape(2);
+  let practiceHits = 0;
   const interval = setInterval(() => {
-    hideAllMoles();
+    _hideCurrentEntity();
     if (round >= 3) { clearInterval(interval); if (cursor) cursor.classList.add('d-none'); return; }
     g2ActiveHoleIdx = round;
     const landscape = document.getElementById('moleLandscape');
@@ -1006,23 +1213,35 @@ function runMolePracticeLoop() {
     mole.innerText = '🐹';
     mole.dataset.isDistractor = 'false';
     mole.classList.add('up');
-    g2MolesShown++;
+    g2SpawnTimestamp = performance.now();
 
-    // Calculate cursor movement position relative to game container
     const rect = holes[g2ActiveHoleIdx].getBoundingClientRect();
     const parent = document.getElementById('gameContainer').getBoundingClientRect();
     if (cursor) {
-      cursor.style.top = `${rect.top - parent.top + rect.height / 2}px`;
-      cursor.style.left = `${rect.left - parent.left + rect.width / 2}px`;
+      cursor.style.top  = `${rect.top  - parent.top  + rect.height / 2}px`;
+      cursor.style.left = `${rect.left - parent.left + rect.width  / 2}px`;
     }
 
-    const tw = setTimeout(() => whackMole(g2ActiveHoleIdx), 900);
-    const th = setTimeout(() => mole.classList.remove('up'), g2MoleUpDur);
+    const tw = setTimeout(() => {
+      const m2 = holes[g2ActiveHoleIdx]?.querySelector('.mole-element-organic');
+      if (m2 && m2.classList.contains('up') && !m2.classList.contains('hit')) {
+        m2.innerText = '💥'; m2.classList.add('hit');
+        practiceHits++;
+        if (practiceHits >= 2) document.getElementById('nextPhaseBtn')?.classList.remove('d-none');
+      }
+    }, 900);
+    const th = setTimeout(() => mole.classList.remove('up'), 1800);
     activeGameTimeouts.push(tw, th);
     round++;
-  }, g2MoleIntMs);
+  }, 2400);
   activeGameIntervals.push(interval);
 }
+
+function _runMolePractice() { runMolePracticeLoop(); }
+
+// ── Shim: old whackMole function kept for practice cursor ──────
+function whackMole(index) { _handleMolePointerDown(index); }
+
 
 // ============================================================
 // GAME 3: GARDEN PATH (Trail Making)
@@ -1031,16 +1250,28 @@ let g3Nodes = [];
 let g3CurrentTargetIdx = 0;
 let g3StartTime = null;
 
+function generateRandomGardenSeq(length) {
+  const numbers = ['1','2','3','4','5','6','7','8','9'].sort(() => 0.5 - Math.random());
+  const letters = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'].sort(() => 0.5 - Math.random());
+  let seq = [];
+  for (let i = 0; i < length; i++) {
+    seq.push(i % 2 === 0 ? numbers[Math.floor(i / 2)] : letters[Math.floor(i / 2)]);
+  }
+  return seq;
+}
+
 function runGame3GardenPath() {
   const grid = document.getElementById('game3TrailGrid');
   grid.classList.remove('d-none');
   document.getElementById('game3NodesWrapper').innerHTML = '';
   document.getElementById('game3SvgLines').innerHTML = '';
 
-  let targetSeq = ['1', 'A', '2', 'B'];
-  if (activeGamePhase === 'actual') {
-    if (gameDifficulty === 'hard') targetSeq = ['1', 'A', '2', 'B', '3', 'C', '4', 'D'];
-    else if (gameDifficulty === 'normal') targetSeq = ['1', 'A', '2', 'B', '3', 'C'];
+  let targetSeq = [];
+  if (activeGamePhase === 'practice') {
+    const practiceLen = Math.floor(Math.random() * 3) + 4; // 4 to 6
+    targetSeq = generateRandomGardenSeq(practiceLen);
+  } else {
+    targetSeq = generateRandomGardenSeq(10);
   }
 
   g3CurrentTargetIdx = 0;
