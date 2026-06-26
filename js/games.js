@@ -997,7 +997,7 @@ function _startPhaseHUD() {
     hud = document.createElement('div');
     hud.id = 'g2HUD';
     hud.style.cssText = `
-      position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+      position:fixed;top:90px;left:50%;transform:translateX(-50%);
       display:flex;align-items:center;gap:16px;z-index:20;
       background:rgba(255,255,255,0.88);border-radius:24px;
       padding:6px 20px;box-shadow:0 2px 10px rgba(0,0,0,0.12);
@@ -1029,16 +1029,13 @@ function _startPhaseHUD() {
 function _updateHUD() {
   const hud = document.getElementById('g2HUD');
   if (!hud) return;
-  const phaseLabel = `Score: <span id="g2HUDScore" style="color:#1a6e3c;">${g2Score}</span>`;
-  hud.innerHTML = `
-    <span style="font-size:0.78rem;color:#7a7a7a;font-weight:600;letter-spacing:.04em;">
-      DIFFICULTY <span id="g2HUDPhase" style="color:#2d7a4f;">Level ${g2Level}/4</span>
-    </span>
-    <span style="font-size:0.82rem;font-weight:700;color:#333;">${phaseLabel}</span>
-    <span style="font-size:0.78rem;color:#7a7a7a;">
-      ⏱ <span id="g2HUDTime" style="font-weight:700;color:#c0392b;">90s</span>
-    </span>
-  `;
+  if (!document.getElementById('g2HUDTime')) {
+    hud.innerHTML = `
+      <span style="font-size:1.1rem;color:#7a7a7a;font-weight:700;">
+        ⏱ <span id="g2HUDTime" style="color:#c0392b;">90s</span>
+      </span>
+    `;
+  }
 }
 
 // ── Grid builder ─────────────────────────────────────────────
@@ -1259,6 +1256,9 @@ function _finishG2Assessment() {
   _hideCurrentEntity();
   clearInterval(g2ClockInterval);
   
+  const timeEl = document.getElementById('g2HUDTime');
+  if (timeEl) timeEl.textContent = '0s';
+  
   if (g2WindowTargets > 0) _evaluateWindow();
 
   const mrt = g2ReactionTimes.length ? _mean(g2ReactionTimes) : null;
@@ -1448,11 +1448,6 @@ function handleTrailNodeClick(index) {
   const now = performance.now();
   if (index !== g3CurrentTargetIdx) {
     if (window.GardenAudio) window.GardenAudio.playError();
-    const nodeEl = document.getElementById(`trail-node-${index}`);
-    if (nodeEl) {
-      nodeEl.classList.add('shake');
-      setTimeout(() => nodeEl.classList.remove('shake'), 400);
-    }
     if (activeGamePhase === 'actual') {
       g3ErrorCount++;
       g3LastErrorTime = now;
@@ -1676,6 +1671,8 @@ let g5IncongruentRTs = [];
 let g5IncongruentCorrect = 0;
 let g5IncongruentTotal = 0;
 let g5CurrentTrialIsCongruent = false;
+let g5LastWordName = '';
+let g5LastFontColor = '';
 
 function runGame5ColourStroop() {
   document.getElementById('game5StroopWrapper').classList.remove('d-none');
@@ -1740,11 +1737,17 @@ function nextStroopTrial() {
     return;
   }
 
-  const wordItem = g5WordColors[Math.floor(Math.random() * 4)];
-  let fontItem = g5WordColors[Math.floor(Math.random() * 4)];
-  if (activeGamePhase === 'actual' && gameDifficulty === 'hard') {
-    while (fontItem.name === wordItem.name) fontItem = g5WordColors[Math.floor(Math.random() * 4)];
-  }
+  let wordItem, fontItem;
+  do {
+    wordItem = g5WordColors[Math.floor(Math.random() * 4)];
+  } while (wordItem.name === g5LastWordName);
+
+  do {
+    fontItem = g5WordColors[Math.floor(Math.random() * 4)];
+  } while (fontItem.color === g5LastFontColor || (activeGamePhase === 'actual' && gameDifficulty === 'hard' && fontItem.name === wordItem.name));
+
+  g5LastWordName = wordItem.name;
+  g5LastFontColor = fontItem.color;
   // Tag trial congruency: congruent if the word name matches the font colour name
   g5CurrentTrialIsCongruent = (wordItem.name === fontItem.name);
 
