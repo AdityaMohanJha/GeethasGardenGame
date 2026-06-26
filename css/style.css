@@ -237,9 +237,11 @@ p {
    Progress bar — flat (no depth), border, bubbling animation
    ============================================================ */
 .nav-progress-wrapper {
-  flex: 1;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
   max-width: 380px;
-  margin: 0 1.5rem
 }
 
 .progress-container {
