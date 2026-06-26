@@ -277,13 +277,7 @@ p {
   border-color: var(--color-red) !important;
 }
 
-/* Yellow demo */
-.btn-yellow-demo  { background-color: #d8b84a !important; color: var(--primary-dark) !important; }
-.btn-yellow-demo:hover { background-color: #c9aa3c !important; }
 
-/* Blue skip */
-.btn-blue-skip  { background-color: var(--color-blue) !important; color: #fff !important; }
-.btn-blue-skip:hover { background-color: #4a7fa5 !important; }
 
 /* Grey — disabled */
 .btn-grey {
@@ -1555,8 +1549,7 @@ p {
 /* ============================================================
    Notification System
    ============================================================ */
-.modal-overlay,
-#demoOverlay {
+.modal-overlay {
   backdrop-filter: blur(6px) !important;
   -webkit-backdrop-filter: blur(6px) !important;
 }

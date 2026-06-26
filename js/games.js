@@ -141,22 +141,54 @@ function loadGameScreen() {
       pit.style.display = activeGameIndex === 6 ? 'none' : '';
     }
     if (spb) {
-      spb.innerText = 'show demo ▶';
-      spb.onclick = () => openDemoOverlay();
+      spb.style.display = activeGameIndex === 6 ? 'none' : '';
+      spb.innerText = 'Start Practice ▶';
+      spb.onclick = () => startPracticeMode();
     }
     if (sgb) {
       sgb.style.display = '';
-      sgb.innerText = 'skip demo ▶';
+      sgb.innerText = 'Start Game ▶';
       sgb.onclick = () => skipToActualGame();
     }
 
-    // Render the thumbnail preview on the small canvas
-    if (typeof renderDemoThumb === 'function') renderDemoThumb(activeGameIndex);
+    // Load corresponding YouTube video
+    const videoUrls = {
+      1: 'nM6OKtm5r90',
+      2: 'FKqynPzQ0n8',
+      3: 'SsREMBgvXp4',
+      4: 'V8tjxJIzgbc',
+      5: 'PmwnHLD8NmQ',
+      6: 'cMb_Vm_vL0I'
+    };
+    const videoId = videoUrls[activeGameIndex];
+    const iframe = document.getElementById('demoVideoIframe');
+    if (iframe) {
+      if (videoId) {
+        iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&fs=1&color=white`;
+      } else {
+        iframe.src = "";
+      }
+    }
+
+    // Reset video wrapper size to standard
+    const wrapper = document.getElementById('demoVideoWrapper');
+    const resizeBtn = document.getElementById('resizeVideoBtn');
+    if (wrapper) {
+      wrapper.style.maxWidth = '480px';
+    }
+    if (resizeBtn) {
+      resizeBtn.innerHTML = 'Theater Mode 📺';
+    }
   } else {
     document.getElementById('gameIntroPanel').classList.add('d-none');
     document.getElementById('gamePlayPanel').classList.remove('d-none');
     const gth = document.getElementById('gameTitleHeader');
     if (gth) gth.classList.remove('d-none');
+
+    // Stop video playback when leaving intro panel
+    const iframe = document.getElementById('demoVideoIframe');
+    if (iframe) iframe.src = "";
+
     launchGameEngine();
   }
 }
@@ -1532,6 +1564,19 @@ function evaluateDelayedRecall() {
   }
 
   setTimeout(finishActiveGame, 800);
+}
+
+function toggleVideoSize() {
+  const wrapper = document.getElementById('demoVideoWrapper');
+  const btn = document.getElementById('resizeVideoBtn');
+  if (!wrapper || !btn) return;
+  if (wrapper.style.maxWidth === '850px') {
+    wrapper.style.maxWidth = '480px';
+    btn.innerHTML = 'Theater Mode 📺';
+  } else {
+    wrapper.style.maxWidth = '850px';
+    btn.innerHTML = 'Standard Mode 📺';
+  }
 }
 
 // EOF
