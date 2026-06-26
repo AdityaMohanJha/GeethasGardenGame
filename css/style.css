@@ -272,11 +272,10 @@ p {
 
 /* Reddish — soft destructive variation */
 .btn-reddish {
-  background-color: #f2c4c4 !important;
+  background-color: #fbbf2b !important;
   color: var(--primary-dark) !important;
   border-color: var(--color-red) !important;
 }
-.btn-reddish:hover { background-color: #edb0b0 !important; }
 
 /* Yellow demo */
 .btn-yellow-demo  { background-color: #d8b84a !important; color: var(--primary-dark) !important; }
