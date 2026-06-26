@@ -1,10 +1,3 @@
-// Add this at the very top of app.js
-const SUPABASE_URL = 'https://vtpgtvzzqmrkrbvnyfoi.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ0cGd0dnp6cW1ya3Jidm55Zm9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5MjIwNjAsImV4cCI6MjA5NzQ5ODA2MH0.9H3svBbVNyv24SJh7EVJzGE19mpZRj_AJTmC93m9v_k';
-
-// Create a single supabase client for interacting with your database
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
 // ============================================================
 // App State Management & Core Logic
 // ============================================================
@@ -232,43 +225,56 @@ function toggleMode(e) {
   updateAuthFields();
 }
 
-// --- PASTE THIS NEW CODE HERE ---
-async function handleAuthSubmit(event) {
-  event.preventDefault(); // Prevents the page from reloading
-
-  const usernameInput = document.getElementById('authUsername').value;
+function handleAuthSubmit(event) {
+  event.preventDefault();
+  const nameInput = document.getElementById('regName')?.value.trim() || '';
+  const usernameInput = document.getElementById('authUsername').value.trim();
   const passwordInput = document.getElementById('authPassword').value;
-  const currentRole = document.querySelector('.login-toggle-btn.active').innerText.toLowerCase(); 
+  const usersDB = JSON.parse(localStorage.getItem('usersDB') || '[]');
 
-  // Send the data to your Supabase 'profiles' table
-  const { data, error } = await supabaseClient
-    .from('profiles')
-    .insert([
-      { 
-        username: usernameInput, 
-        password: passwordInput, 
-        role: currentRole 
-      }
-    ])
-    .select(); 
+  if (authMode === 'register') {
+    if (usersDB.some(u => u.username.toLowerCase() === usernameInput.toLowerCase() && u.role === activeRole)) {
+      alert('An account with that username already exists.'); return;
+    }
 
-  if (error) {
-    console.error("Supabase Error:", error.message);
-    alert("Oops! Couldn't create user: " + error.message);
-    return;
-  }
+    if (activeRole === 'patient') {
+      window.tempRegData = {
+        username: usernameInput,
+        name: nameInput || usernameInput,
+        password: passwordInput,
+        role: activeRole,
+        age: document.getElementById('regAge').value.trim(),
+        gender: document.getElementById('regGender').value.trim(),
+        contact: document.getElementById('regContact').value.trim(),
+        education: document.getElementById('regEducation').value,
+        tech: document.getElementById('regTech').value
+      };
 
-  if (data) {
-    console.log("Success! User added to Supabase:", data);
-    
-    // Save minimal data locally just so the next page knows who logged in
-    localStorage.setItem('activeUser', JSON.stringify(data[0]));
-
-    if (currentRole === 'patient') {
-      window.location.href = 'patient.html';
+      const toggleGrp = document.querySelector('.login-toggle-group');
+      if (toggleGrp) toggleGrp.classList.add('d-none');
+      document.getElementById('formTitle').classList.add('d-none');
+      document.getElementById('authForm').classList.add('d-none');
+      document.getElementById('consentSection').classList.remove('d-none');
     } else {
+      const newUser = {
+        username: usernameInput,
+        name: nameInput || usernameInput,
+        password: passwordInput,
+        role: activeRole,
+        age: document.getElementById('regAge').value.trim(),
+        gender: document.getElementById('regGender').value.trim(),
+        contact: document.getElementById('regContact').value.trim()
+      };
+      usersDB.push(newUser);
+      localStorage.setItem('usersDB', JSON.stringify(usersDB));
+      localStorage.setItem('activeDoctor', JSON.stringify(newUser));
       window.location.href = 'doctor.html';
     }
+  } else {
+    const user = usersDB.find(u => u.username.toLowerCase() === usernameInput.toLowerCase() && u.password === passwordInput && u.role === activeRole);
+    if (!user) { alert('Invalid username or password.'); return; }
+    if (activeRole === 'patient') { localStorage.setItem('activeUser', JSON.stringify(user)); window.location.href = 'patient.html'; }
+    else { localStorage.setItem('activeDoctor', JSON.stringify(user)); window.location.href = 'doctor.html'; }
   }
 }
 
@@ -924,7 +930,17 @@ function showPatientReport(index) {
   document.getElementById('game1Seq').innerText = g.flowerMemory?.maxSeq || 'N/A';
   document.getElementById('game1Score').innerText = g.flowerMemory?.score || 'N/A';
   document.getElementById('game2Grid').innerText = g.whackMole?.maxGrid || 'N/A';
-  document.getElementById('game2Score').innerText = g.whackMole?.hits || 'N/A';
+  document.getElementById('game2Score').innerText = g.whackMole?.hits ?? 'N/A';
+  document.getElementById('game2MRT').innerText = g.whackMole?.mrt != null ? `${g.whackMole.mrt} ms` : 'N/A';
+  document.getElementById('game2RTV').innerText = g.whackMole?.rtv != null ? `±${g.whackMole.rtv} ms` : 'N/A';
+  document.getElementById('game2Omission').innerText = g.whackMole?.omissionErrors ?? 'N/A';
+  document.getElementById('game2Commission').innerText = g.whackMole?.commissionErrors ?? 'N/A';
+  document.getElementById('game2Recovery').innerText = g.whackMole?.recoveryTimeMs != null ? `${g.whackMole.recoveryTimeMs} ms` : 'N/A';
+  document.getElementById('game2Adapt').innerText = g.whackMole?.adaptabilityDrop != null ? `${g.whackMole.adaptabilityDrop}%` : 'N/A';
+  document.getElementById('game2P1MRT').innerText = g.whackMole?.phase1MRT != null ? `${g.whackMole.phase1MRT} ms` : 'N/A';
+  document.getElementById('game2P2MRT').innerText = g.whackMole?.phase2MRT != null ? `${g.whackMole.phase2MRT} ms` : 'N/A';
+  document.getElementById('game2P3MRT').innerText = g.whackMole?.phase3MRT != null ? `${g.whackMole.phase3MRT} ms` : 'N/A';
+  document.getElementById('game2GridExpand').innerText = g.whackMole?.reachedGridExpand != null ? (g.whackMole.reachedGridExpand ? 'Yes ✅' : 'No') : 'N/A';
   document.getElementById('game3Nodes').innerText = g.gardenPath?.nodes || 'N/A';
   document.getElementById('game3Time').innerText = g.gardenPath?.time || 'N/A';
   document.getElementById('game5Acc').innerText = g.stroop?.acc || 'N/A';
