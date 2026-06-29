@@ -481,7 +481,7 @@ function submitStep3() {
   const obj2 = document.getElementById('namingObj2').value.trim();
   const obj3 = document.getElementById('namingObj3').value.trim();
   if (!obj1 || !obj2 || !obj3) { alert('Please name all three objects.'); return; }
-  currentAssessmentData.naming = { 
+  currentAssessmentData.naming = {
     obj1, obj2, obj3,
     expected: _namingSelected ? _namingSelected.map(i => i.label) : []
   };
@@ -651,7 +651,7 @@ function startGardenJourney() {
 const namingPool = [
   { src: 'images/cat.webp', label: 'Cat' },
   { src: 'images/dog.webp', label: 'Dog' },
-  { src: 'images/chickem.webp', label: 'Chicken' },
+  { src: 'images/chicken.webp', label: 'Chicken' },
   { src: 'images/crow.webp', label: 'Crow' },
   { src: 'images/frog.webp', label: 'Frog' },
   { src: 'images/gloves.webp', label: 'Gloves' },
@@ -803,24 +803,8 @@ function triggerCongratulations() {
   const trophyRow = document.getElementById('trophyRow');
   if (trophyRow) trophyRow.style.display = 'none';
 
-  // Falling flowers
-  spawnFallingFlowers();
 }
 
-function spawnFallingFlowers() {
-  const emojis = ['🌸', '🌼', '🌷', '🌹', '🌺', '🌻', '🍃', '🏵️', '💮'];
-  for (let i = 0; i < 85; i++) {
-    const el = document.createElement('div');
-    el.className = 'falling-flower';
-    el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-    el.style.left = Math.random() * 100 + 'vw';
-    el.style.fontSize = (1.5 + Math.random() * 5.0) + 'rem';
-    el.style.animationDuration = (1.2 + Math.random() * 2.3) + 's';
-    el.style.animationDelay = (Math.random() * 3.0) + 's';
-    document.body.appendChild(el);
-    el.addEventListener('animationend', () => el.remove());
-  }
-}
 
 function restartScreening() {
   localStorage.removeItem('tempAssessmentData');
