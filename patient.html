@@ -614,17 +614,56 @@
     <!-- ════════════════════════════════════════════════════════
        CONGRATULATIONS
   ════════════════════════════════════════════════════════════ -->
-    <div class="d-none step-centered" id="screenCongratulations">
-      <h2 style="margin-bottom:.5rem;">Wonderful Job!</h2>
-      <p style="font-size:1.15rem;margin-bottom:1.5rem;">You've completed all parts of the cognitive screening.</p>
-      <div class="notification-box text-center" style="max-width:540px;">
-        <div class="notification-box-title">Garden Fully Blooming! 🌻</div>
-        <p style="margin:0;">"Your responses and drawings have been recorded securely. Take a deep breath and have a
-          restful day."</p>
+    <div class="d-none" id="screenCongratulations">
+      <!-- Gradient circle lower half fills top of screen -->
+      <div class="congrats-banner">
+        <!-- Decorative confetti dots -->
+        <span class="confetti-dot" style="top:18%;left:8%;width:14px;height:14px;background:#f9c74f;border-radius:50%;"></span>
+        <span class="confetti-dot" style="top:10%;left:18%;width:10px;height:10px;background:#f4a261;border-radius:2px;transform:rotate(30deg);"></span>
+        <span class="confetti-dot" style="top:35%;left:12%;width:8px;height:8px;background:#fff;border-radius:50%;"></span>
+        <span class="confetti-dot" style="top:8%;left:35%;width:7px;height:7px;background:#f9c74f;border-radius:50%;"></span>
+        <span class="confetti-dot" style="top:25%;left:55%;width:8px;height:8px;background:#f4a261;border-radius:2px;transform:rotate(-20deg);"></span>
+        <span class="confetti-dot" style="top:12%;right:25%;width:7px;height:7px;background:#fff;border-radius:50%;"></span>
+        <span class="confetti-dot" style="top:30%;right:15%;width:9px;height:9px;background:#f4a261;border-radius:2px;transform:rotate(45deg);"></span>
+        <span class="confetti-dot" style="top:6%;right:8%;width:12px;height:12px;border:2px solid #f9c74f;border-radius:50%;background:transparent;"></span>
+        <span class="confetti-dot" style="top:40%;right:30%;width:7px;height:7px;border:2px solid #fff;border-radius:50%;background:transparent;"></span>
+        <span class="confetti-dot" style="top:15%;left:45%;width:6px;height:6px;background:#fff;border-radius:50%;opacity:.6;"></span>
+        <!-- Starburst lines -->
+        <span class="confetti-burst" style="top:22%;left:5%;"></span>
+        <span class="confetti-burst" style="top:18%;right:5%;"></span>
+        <span class="confetti-burst" style="top:10%;left:60%;"></span>
       </div>
-      <div class="flex-center mt-3" style="gap:1.25rem;">
-        <button class="btn btn-blue" onclick="restartScreening()">Try Again</button>
-        <button class="btn btn-red" onclick="confirmLogout()">Exit</button>
+
+      <!-- Medal SVG centred, overlapping the arc (scaled to 240x285, which is 75% of previous size) -->
+      <div class="congrats-medal">
+        <svg viewBox="0 0 160 190" xmlns="http://www.w3.org/2000/svg" width="240" height="285">
+          <!-- Ribbon left -->
+          <polygon points="50,96 70,96 58,148 38,148" fill="#4361ee"/>
+          <!-- Ribbon right -->
+          <polygon points="110,96 90,96 102,148 122,148" fill="#3a0ca3"/>
+          <!-- Medal outer ring (shadow) -->
+          <circle cx="80" cy="82" r="56" fill="#d4a017"/>
+          <!-- Medal mid ring -->
+          <circle cx="80" cy="82" r="51" fill="#f9c74f"/>
+          <!-- Medal highlight ring -->
+          <circle cx="80" cy="82" r="43" fill="#ffd166"/>
+          <!-- Gear teeth -->
+          <polygon points="80,30 85,43 96,35 98,48 111,44 107,57 121,58 113,70 124,76 113,84 120,96 107,100 110,113 97,109 96,123 84,115 80,128 76,115 64,123 63,109 50,113 53,100 40,96 47,84 36,76 47,70 39,58 53,57 49,44 62,48 64,35 75,43" fill="#f9c74f" opacity="0.4"/>
+          <!-- Inner circle for star -->
+          <circle cx="80" cy="82" r="34" fill="#f9a826"/>
+          <!-- Star -->
+          <polygon points="80,54 84.7,70 102,70 88.3,80 93,96 80,86 67,96 71.7,80 58,70 75.3,70" fill="#fff"/>
+        </svg>
+      </div>
+
+      <!-- Text body -->
+      <div class="congrats-body">
+        <h2 class="congrats-title">Congratulations! 🌸</h2>
+        <p class="congrats-subtitle">Wonderful job! You did an amazing job completing all the games and activities today. Your responses and drawings have been recorded securely. Take a deep breath, relax, and have a truly wonderful day ahead!</p>
+        <div class="flex-center mt-3" style="gap:1.25rem; width: 100%;">
+          <button class="btn btn-blue" onclick="restartScreening()" style="font-size: 0.95rem; padding: 0.6rem 1.65rem;">Try Again</button>
+          <button class="btn btn-red" onclick="confirmLogout()" style="font-size: 0.95rem; padding: 0.6rem 1.65rem;">Exit</button>
+        </div>
       </div>
     </div>
 

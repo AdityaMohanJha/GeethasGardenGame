@@ -209,7 +209,7 @@ let _finishingGame = false;
 function finishActiveGame() {
   if (_finishingGame) return;
   _finishingGame = true;
-  
+
   const g2Hud = document.getElementById('g2HUD');
   if (g2Hud) g2Hud.remove();
 
@@ -520,7 +520,7 @@ function startPracticeTrial() {
     }
     return;
   }
-  
+
   g1PracticeCurrentLength = (g1PracticeAttemptCount < 2) ? 2 : 3;
 
   g1UserSequence = [];
@@ -592,7 +592,7 @@ function handleMainGameFail() {
       g1TrialsAtLength = 0;
       g1PassesAtLength = 0;
       g1MainGameTryIndex = 0;
-      
+
       const t = setTimeout(() => {
         g1ClickLocked = false;
         generateNewSequence();
@@ -665,15 +665,15 @@ let g2CurrentEntityTimeout = null; // handle to despawn current entity
 // Coordinate grids (fixed 120×120 px holes, centred in fixed 600×440 px canvas)
 const G2_COORDS = {
   2: [
-    { left: 105, top: 70  },
-    { left: 375, top: 70  },
+    { left: 105, top: 70 },
+    { left: 375, top: 70 },
     { left: 105, top: 250 },
     { left: 375, top: 250 }
   ],
   3: [
-    { left: 60,  top: 30  }, { left: 240, top: 30  }, { left: 420, top: 30  },
-    { left: 60,  top: 160 }, { left: 240, top: 160 }, { left: 420, top: 160 },
-    { left: 60,  top: 290 }, { left: 240, top: 290 }, { left: 420, top: 290 }
+    { left: 60, top: 30 }, { left: 240, top: 30 }, { left: 420, top: 30 },
+    { left: 60, top: 160 }, { left: 240, top: 160 }, { left: 420, top: 160 },
+    { left: 60, top: 290 }, { left: 240, top: 290 }, { left: 420, top: 290 }
   ]
 };
 
@@ -737,9 +737,9 @@ function _startPhaseHUD() {
     const elapsed = (performance.now() - g2AssessmentStartTime) / 1000;
     const remaining = Math.max(0, 90 - elapsed);
     const secs = Math.ceil(remaining);
-    const timeEl  = document.getElementById('g2HUDTime');
+    const timeEl = document.getElementById('g2HUDTime');
     const scoreEl = document.getElementById('g2HUDScore');
-    if (timeEl)  timeEl.textContent  = `${secs}s`;
+    if (timeEl) timeEl.textContent = `${secs}s`;
     if (scoreEl) scoreEl.textContent = `${g2Score}`;
 
     // Check 15-second evaluation window
@@ -769,14 +769,14 @@ function _buildMoleLandscape(size) {
   const landscape = document.createElement('div');
   landscape.id = 'moleLandscape';
   landscape.className = 'mole-landscape';
-  // Fixed-size canvas centred inside gc
+  // Position relatively and center within parent container via flexbox/margin
   landscape.style.cssText = `
-    position:fixed;width:600px;height:440px;
-    left:50%;top:50%;transform:translate(-50%,-50%);
+    position:relative;width:600px;height:440px;min-height:440px;
+    margin:0 auto;
   `;
 
   const coords = G2_COORDS[size] || G2_COORDS[2];
-  const decors = ['🌱','🌸','🍄','🌿','🌻','🍀','🌾','🌼','🌺'];
+  const decors = ['🌱', '🌸', '🍄', '🌿', '🌻', '🍀', '🌾', '🌼', '🌺'];
 
   for (let i = 0; i < coords.length; i++) {
     const hole = document.createElement('div');
@@ -788,9 +788,9 @@ function _buildMoleLandscape(size) {
       left:${coords[i].left}px;top:${coords[i].top}px;
     `;
 
-    const rim   = document.createElement('div'); rim.className = 'soil-rim';
-    const pit   = document.createElement('div'); pit.className = 'soil-pit';
-    const mole  = document.createElement('div'); mole.className = 'mole-element-organic';
+    const rim = document.createElement('div'); rim.className = 'soil-rim';
+    const pit = document.createElement('div'); pit.className = 'soil-pit';
+    const mole = document.createElement('div'); mole.className = 'mole-element-organic';
     mole.innerText = '🐹';
 
     hole.appendChild(rim);
@@ -819,12 +819,12 @@ function _scheduleNextSpawn() {
   g2SpawnTimeout = setTimeout(() => {
     _hideCurrentEntity();
     _spawnEntity();
-    
+
     // Schedule despawn
     g2CurrentEntityTimeout = setTimeout(() => {
       const liveElapsed = performance.now() - g2AssessmentStartTime;
       if (liveElapsed >= 90000) { _finishG2Assessment(); return; }
-      
+
       const landscape = document.getElementById('moleLandscape');
       const hole = landscape?.querySelector(`.mole-hole-organic[data-index="${g2ActiveHoleIdx}"]`);
       const moleEl = hole?.querySelector('.mole-element-organic');
@@ -894,7 +894,7 @@ function _handleMolePointerDown(index) {
   if (isDistractor) {
     mole.innerText = '🚫';
     if (window.GardenAudio) window.GardenAudio.playError();
-    
+
     if (activeGamePhase === 'practice') {
       _showPhaseFlash("Don't hit the bees!", '#c0392b');
     } else {
@@ -904,7 +904,7 @@ function _handleMolePointerDown(index) {
   } else {
     mole.innerText = '💥';
     if (window.GardenAudio) window.GardenAudio.playSuccess();
-    
+
     if (activeGamePhase === 'practice') {
       _showPhaseFlash("Good job!", '#2d7a4f');
     } else {
@@ -929,34 +929,34 @@ function _handleMolePointerDown(index) {
 
 function _evaluateWindow() {
   if (g2WindowTargets === 0) return;
-  
+
   const accuracy = (g2WindowHits / g2WindowTargets) * 100;
-  const avgRT = g2WindowRTs.length > 0 ? (g2WindowRTs.reduce((a,b)=>a+b,0) / g2WindowRTs.length) : 2000;
-  
+  const avgRT = g2WindowRTs.length > 0 ? (g2WindowRTs.reduce((a, b) => a + b, 0) / g2WindowRTs.length) : 2000;
+
   let rtScore = 100 * (2000 - avgRT) / 1500;
   rtScore = Math.max(0, Math.min(100, rtScore));
-  
+
   const performanceScore = (0.7 * accuracy) + (0.3 * rtScore);
-  
+
   let oldLevel = g2Level;
   if (performanceScore >= 80 && g2Level < 4) {
     g2Level++;
   } else if (performanceScore <= 55 && g2Level > 1) {
     g2Level--;
   }
-  
+
   if (g2Level > g2HighestLevel) g2HighestLevel = g2Level;
   g2LevelSustainedArray.push(g2Level);
-  
+
   if (G2_LEVEL_CONFIG[oldLevel].grid !== G2_LEVEL_CONFIG[g2Level].grid) {
     g2GridSize = G2_LEVEL_CONFIG[g2Level].grid;
     _buildMoleLandscape(g2GridSize);
     g2ActiveHoleIdx = -1;
   }
 
-  
+
   _updateHUD();
-  
+
   g2WindowTargets = 0;
   g2WindowHits = 0;
   g2WindowRTs = [];
@@ -982,16 +982,16 @@ function _showPhaseFlash(msg, color) {
 function _finishG2Assessment() {
   _hideCurrentEntity();
   clearInterval(g2ClockInterval);
-  
+
   if (g2WindowTargets > 0) _evaluateWindow();
 
   const mrt = g2ReactionTimes.length ? _mean(g2ReactionTimes) : null;
   const rtv = g2ReactionTimes.length > 1 ? _stdDev(g2ReactionTimes) : null;
-  
+
   const accuracy = g2TotalTargets > 0 ? (g2TotalHits / g2TotalTargets) * 100 : 0;
   const distractorErrorRate = g2TotalDistractors > 0 ? (g2TotalDistractorClicks / g2TotalDistractors) * 100 : 0;
   const missRate = g2TotalTargets > 0 ? (g2TotalMissed / g2TotalTargets) * 100 : 0;
-  
+
   const avgLevel = g2LevelSustainedArray.length ? _mean(g2LevelSustainedArray) : g2Level;
 
   gameSessionData.whackMole = {
@@ -1007,7 +1007,7 @@ function _finishG2Assessment() {
   };
 
   // Preserve legacy difficulty heuristic
-  if (g2TotalHits <= 10)      gameDifficulty = 'easy';
+  if (g2TotalHits <= 10) gameDifficulty = 'easy';
   else if (g2TotalHits >= 25) gameDifficulty = 'hard';
 
   setTimeout(finishActiveGame, 1500);
@@ -1024,7 +1024,7 @@ function _stdDev(arr) {
 function runMolePracticeLoop() {
   const cursor = document.getElementById('practiceCursor');
   if (cursor) cursor.classList.add('d-none');
-  
+
   _buildMoleLandscape(2);
   let activePTimeout = null;
 
@@ -1033,21 +1033,21 @@ function runMolePracticeLoop() {
     const landscape = document.getElementById('moleLandscape');
     const holes = landscape?.querySelectorAll('.mole-hole-organic');
     if (!holes || holes.length === 0) return;
-    
+
     let idx;
     do { idx = Math.floor(Math.random() * holes.length); } while (idx === g2ActiveHoleIdx);
     g2ActiveHoleIdx = idx;
-    
+
     const mole = holes[g2ActiveHoleIdx].querySelector('.mole-element-organic');
     if (!mole) return;
     mole.classList.remove('hit');
-    
+
     const isDistractor = Math.random() < 0.3;
     mole.innerText = isDistractor ? '🐝' : '🐹';
     mole.dataset.isDistractor = isDistractor ? 'true' : 'false';
     mole.classList.add('up');
     g2SpawnTimestamp = performance.now();
-    
+
     const th = setTimeout(() => {
       if (mole.classList.contains('up') && !mole.classList.contains('hit') && !isDistractor) {
         _showPhaseFlash("Hit the mole!", '#c0392b');
@@ -1086,8 +1086,8 @@ let g3LastNodeIdx = -1;
 let g3VisitedNodes = [];
 
 function generateRandomGardenSeq(length) {
-  const numbers = ['1','2','3','4','5','6','7','8','9'].sort(() => 0.5 - Math.random());
-  const letters = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'].sort(() => 0.5 - Math.random());
+  const numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9'].sort(() => 0.5 - Math.random());
+  const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'].sort(() => 0.5 - Math.random());
   let seq = [];
   for (let i = 0; i < length; i++) {
     seq.push(i % 2 === 0 ? numbers[Math.floor(i / 2)] : letters[Math.floor(i / 2)]);
@@ -1179,7 +1179,7 @@ function handleTrailNodeClick(index) {
       highlightActiveTrailNode();
       return;
     }
-    
+
     // Correct click
     g3WrongClicks = 0;
     const nodeEl = document.getElementById(`trail-node-${index}`);
@@ -1187,7 +1187,7 @@ function handleTrailNodeClick(index) {
     nodeEl.classList.add('completed');
     if (g3CurrentTargetIdx > 0) drawTrailLine(g3Nodes[g3CurrentTargetIdx - 1], g3Nodes[index]);
     g3CurrentTargetIdx++;
-    
+
     if (g3CurrentTargetIdx < g3Nodes.length) {
       if (window.GardenAudio) window.GardenAudio.playPop();
       highlightActiveTrailNode();
@@ -1198,18 +1198,18 @@ function handleTrailNodeClick(index) {
   } else {
     // Main Game: Open Exploration
     if (g3VisitedNodes.includes(index)) return; // ignore already visited
-    
+
     g3VisitedNodes.push(index);
     const nodeEl = document.getElementById(`trail-node-${index}`);
     nodeEl.classList.add('completed');
-    
+
     if (g3LastNodeIdx !== -1) {
       const lastNode = g3Nodes.find(n => n.index === g3LastNodeIdx);
       const currNode = g3Nodes.find(n => n.index === index);
       drawTrailLine(lastNode, currNode);
     }
     g3LastNodeIdx = index;
-    
+
     if (window.GardenAudio) window.GardenAudio.playPop();
 
     if (g3VisitedNodes.length >= g3Nodes.length) {
