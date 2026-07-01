@@ -111,6 +111,15 @@ document.addEventListener('click', (e) => {
 }, true);
 
 
+
+function startPreAssessment() {
+    document.getElementById('screenWelcome').classList.add('d-none');
+    document.getElementById('stepEmotion').classList.remove('d-none');
+
+    if (typeof updateProgressBar === 'function') {
+        updateProgressBar(1);
+    }
+}
 // ── Database bootstrap ────────────────────────────────────────
 function initDatabase() {
   if (!localStorage.getItem('usersDB')) {
