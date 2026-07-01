@@ -209,7 +209,11 @@ function updateAuthFields() {
   } else {
     t.innerText = activeRole === 'doctor' ? 'Clinician Login' : 'Patient Login';
     sub.innerText = 'Log In';
-    tog.innerHTML = `Don't have an account? <a href="#" onclick="toggleMode(event)" style="font-weight:800;color:var(--color-pink);text-decoration:underline;">Register here</a>`;
+    
+    // UPDATED: Only show the "Register here" toggle if the active role is patient
+    tog.innerHTML = activeRole === 'patient' 
+      ? `Don't have an account? <a href="#" onclick="toggleMode(event)" style="font-weight:800;color:var(--color-pink);text-decoration:underline;">Register here</a>` 
+      : ''; 
 
     [nfg, afg, gfg, cfg, efg, tfg].forEach(fg => {
       if (fg) {
@@ -347,7 +351,7 @@ let currentAssessmentData = {
   subtraction: [], sentenceRepetition: [], verbalFluency: {}, similarities: '',
   games: {}, feedback: {}
 };
-function startPreAssessment() {
+function start() {
   document.getElementById('screenWelcome').style.display = 'none';
   currentStep = 1;
   updateAssessmentView();
@@ -805,7 +809,7 @@ const finalReport = {
     tech: activeUser.tech || 'N/A',
     date: new Date().toLocaleDateString(),
     viewed: false,
-    preassessment: tempData, // <-- Database requires this to be lowercase
+    preAssessment: tempData, // <-- Database requires this to be lowercase
     games: gameResults,
     feedback: { 
       enjoy: selectedEnjoy, 
@@ -911,12 +915,12 @@ function renderPatientsTable(list) {
 
 function filterPatientsList() {
   const q = document.getElementById('patientSearchInput').value.toLowerCase();
-  const list = JSON.parse(localStorage.getItem('patientAssessments') || '[]');
+    const list = window.currentPatientList || [];
   renderPatientsTable(list.filter(a => a.name.toLowerCase().includes(q) || a.username.toLowerCase().includes(q)));
 }
 
 function showPatientReport(index) {
-  const list = JSON.parse(localStorage.getItem('patientAssessments') || '[]');
+  const list = window.currentPatientList || [];
   const record = list[index];
   if (!record) return;
   _currentReportIndex = index;
@@ -1014,13 +1018,19 @@ function closeReport() {
 
 function markCurrentViewed() {
   if (_currentReportIndex < 0) return;
-  const list = JSON.parse(localStorage.getItem('patientAssessments') || '[]');
+
+  const list = window.currentPatientList || [];
+
   if (list[_currentReportIndex]) {
     list[_currentReportIndex].viewed = true;
-    localStorage.setItem('patientAssessments', JSON.stringify(list));
   }
+
   const btn = document.getElementById('markViewedBtn');
-  if (btn) { btn.innerText = 'Viewed ✓'; btn.classList.add('btn-grey'); }
+  if (btn) {
+    btn.innerText = 'Viewed ✓';
+    btn.classList.add('btn-grey');
+  }
+
   renderPatientsTable(list);
 }
 
