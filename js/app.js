@@ -399,7 +399,7 @@ function updateProgress(cur, total) {
   fill.style.width = total > 0 ? `${(cur / total) * 100}%` : '100%';
   txt.innerText = total > 0 ? `Step ${cur} of ${total}` : (cur === 10 ? '' : 'Done!');
 }
-
+let sentenceAudioUrls = [];
 function updateAssessmentView() {
   hideAllSteps();
   const skipBtn = document.getElementById('skipBtn');
@@ -590,6 +590,7 @@ let sentenceIndex = 0;
 
 function initSentenceRepetition() {
   sentenceIndex = 0;
+  sentenceAudioUrls = [];
   currentAssessmentData.sentenceRepetition = [];
   document.getElementById('sentenceScoringPanel').classList.add('d-none');
   document.getElementById('sentenceStartBtnContainer').classList.remove('d-none');
@@ -601,11 +602,72 @@ function startSentenceRound() {
   const display = document.getElementById('sentenceTextDisplay');
   display.innerText = `"${sentenceRounds[sentenceIndex]}"`;
   display.classList.remove('d-none');
-  setTimeout(() => {
+
+  setTimeout(async () => {
     display.classList.add('d-none');
+    await recordSentenceAudio();
     document.getElementById('sentenceScoringPanel').classList.remove('d-none');
   }, 5000);
 }
+
+function recordSentenceAudio() {
+  return new Promise(async (resolve) => {
+    const indicator = document.getElementById('sentenceRecordingIndicator');
+    const countdownEl = document.getElementById('sentenceRecordCountdown');
+    const roundIndex = sentenceIndex;
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      let chunks = [];
+      const recorder = new MediaRecorder(stream);
+      recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+
+      recorder.onstop = async () => {
+        stream.getTracks().forEach(track => track.stop());
+        indicator.classList.add('d-none');
+        const blob = new Blob(chunks, { type: 'audio/webm' });
+        sentenceAudioUrls[roundIndex] = await uploadSentenceAudioBlob(blob, roundIndex);
+        resolve();
+      };
+
+      indicator.classList.remove('d-none');
+      let secondsLeft = 7;
+      countdownEl.innerText = secondsLeft;
+      const countdownInterval = setInterval(() => {
+        secondsLeft--;
+        countdownEl.innerText = Math.max(secondsLeft, 0);
+        if (secondsLeft <= 0) clearInterval(countdownInterval);
+      }, 1000);
+
+      recorder.start();
+      setTimeout(() => { if (recorder.state !== 'inactive') recorder.stop(); }, 7000);
+
+    } catch (err) {
+      console.error('Microphone unavailable:', err);
+      indicator.classList.add('d-none');
+      sentenceAudioUrls[roundIndex] = null;
+      resolve();
+    }
+  });
+}
+
+async function uploadSentenceAudioBlob(blob, roundIndex) {
+  const activeUser = JSON.parse(localStorage.getItem('activeUser') || '{}');
+  const fileName = `${activeUser.username || 'anon'}_${Date.now()}_r${roundIndex + 1}.webm`;
+
+  const { error } = await supabaseClient.storage
+    .from('sentence-audio')
+    .upload(fileName, blob, { contentType: 'audio/webm' });
+
+  if (error) {
+    console.error('Audio upload failed:', error);
+    return null;
+  }
+
+  const { data } = supabaseClient.storage.from('sentence-audio').getPublicUrl(fileName);
+  return data.publicUrl;
+}
+
 
 function scoreSentence(isCorrect) {
   if (isCorrect) {
@@ -613,7 +675,11 @@ function scoreSentence(isCorrect) {
   } else {
     if (window.GardenAudio) window.GardenAudio.playError();
   }
-  currentAssessmentData.sentenceRepetition.push({ sentence: sentenceRounds[sentenceIndex], result: isCorrect ? 'Correct' : 'Incorrect' });
+  currentAssessmentData.sentenceRepetition.push({
+    sentence: sentenceRounds[sentenceIndex],
+    result: isCorrect ? 'Correct' : 'Incorrect',
+    audioUrl: sentenceAudioUrls[sentenceIndex] || null
+  });
   document.getElementById('sentenceScoringPanel').classList.add('d-none');
   sentenceIndex++;
   if (sentenceIndex < 2) {
