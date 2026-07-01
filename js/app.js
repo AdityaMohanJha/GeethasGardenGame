@@ -960,12 +960,20 @@ async function loadDoctorDashboard() {
   const docObj = JSON.parse(activeDoc);
   // const badge = document.getElementById('doctorNameBadge');
   // if (badge) badge.innerText = docObj.name || docObj.username;
-  
+
+  function formatDateTime(isoString) {
+  if (!isoString) return 'N/A';
+  const d = new Date(isoString);
+  return d.toLocaleString(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short'
+  });
+}
   // Fetch from Supabase
-  const { data: assessments, error } = await supabaseClient
-    .from('app_assessments')
-    .select('*')
-    .order('date', { ascending: false });
+ const { data: assessments, error } = await supabaseClient
+  .from('app_assessments')
+  .select('*')
+  .order('created_at', { ascending: false });
     
   if (error) {
     console.error("Error fetching patients:", error);
@@ -986,23 +994,23 @@ function renderPatientsTable(list) {
     return;
   }
   tbody.innerHTML = list.map((item, idx) => {
-    let statusClass = 'badge-green', statusLabel = 'Completed';
-    if (item.preAssessment?.subtraction) {
-      const mistakes = item.preAssessment.subtraction.filter(s => !s.correct).length;
-      if (mistakes > 2) { statusClass = 'badge-orange'; statusLabel = 'Attention'; }
-    }
-    const viewedMark = item.viewed ? ' ✓' : '';
-    return `
-      <tr>
-        <td><strong>${item.name}</strong>${viewedMark ? ` <span style="color:var(--color-green);font-size:.8rem;">${viewedMark}</span>` : ''}</td>
-        <td><code>${item.username}</code></td>
-        <td>${item.date}</td>
-        <td><span class="badge ${statusClass}">${statusLabel}</span></td>
-        <td>
-          <button class="btn btn-blue" onclick="showPatientReport(${idx})" style="padding:.35rem .75rem;font-size:.82rem;">View Report</button>
-        </td>
-      </tr>`;
-  }).join('');
+  let statusClass = 'badge-green', statusLabel = 'Completed';
+  if (item.preAssessment?.subtraction) {
+    const mistakes = item.preAssessment.subtraction.filter(s => !s.correct).length;
+    if (mistakes > 2) { statusClass = 'badge-orange'; statusLabel = 'Attention'; }
+  }
+  const viewedMark = item.viewed ? ' ✓' : '';
+  return `
+    <tr>
+      <td><strong>${item.name}</strong>${viewedMark ? ` <span style="color:var(--color-green);font-size:.8rem;">${viewedMark}</span>` : ''}</td>
+      <td><code>${item.username}</code></td>
+      <td>${formatDateTime(item.created_at)}</td>
+      <td><span class="badge ${statusClass}">${statusLabel}</span></td>
+      <td>
+        <button class="btn btn-blue" onclick="showPatientReport(${idx})" style="padding:.35rem .75rem;font-size:.82rem;">View Report</button>
+      </td>
+    </tr>`;
+}).join('');
 }
 
 function filterPatientsList() {
