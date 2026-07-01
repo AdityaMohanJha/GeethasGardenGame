@@ -464,7 +464,7 @@ case 12:
 }
 function goToFeedback() {
     currentStep = 11;
-    showCurrentStep();
+    updateAssessmentView();
 }
 // Mascot — always hidden (grandma disabled globally)
 function showMascot() {
