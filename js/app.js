@@ -786,7 +786,7 @@ function selectOption(category, val, el) {
 
 async function submitFeedback(event) {
   event.preventDefault();
-  if (!selectedFeedbackEnjoy || !selectedFeedbackEasy) { 
+  if (!selectedEnjoy || !selectedEasy) { 
     alert('Please answer both survey questions.'); 
     return; 
   }
@@ -808,8 +808,8 @@ async function submitFeedback(event) {
     preAssessment: tempData,
     games: gameResults,
     feedback: { 
-      enjoy: selectedFeedbackEnjoy, 
-      easy: selectedFeedbackEasy, 
+      enjoy: selectedEnjoy, 
+      easy: selectedEasy, 
       comments: document.getElementById('feedbackComments').value.trim() 
     }
   };
