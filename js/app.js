@@ -875,8 +875,8 @@ async function loadDoctorDashboard() {
   if (!activeDoc) { window.location.href = 'index.html'; return; }
   
   const docObj = JSON.parse(activeDoc);
-  const badge = document.getElementById('doctorNameBadge');
-  if (badge) badge.innerText = docObj.name || docObj.username;
+  // const badge = document.getElementById('doctorNameBadge');
+  // if (badge) badge.innerText = docObj.name || docObj.username;
   
   // Fetch from Supabase
   const { data: assessments, error } = await supabaseClient
@@ -982,27 +982,91 @@ function showPatientReport(index) {
 
   document.getElementById('repSimilarityText').innerText = pa.similarities || 'N/A';
 
-  const g = record.games || {};
-  document.getElementById('game1Seq').innerText = g.flowerMemory?.maxSeq || 'N/A';
-  document.getElementById('game1Score').innerText = g.flowerMemory?.score || 'N/A';
-  document.getElementById('game2Grid').innerText = g.whackMole?.maxGrid || 'N/A';
-  document.getElementById('game2Score').innerText = g.whackMole?.hits ?? 'N/A';
-  document.getElementById('game2MRT').innerText = g.whackMole?.mrt != null ? `${g.whackMole.mrt} ms` : 'N/A';
-  document.getElementById('game2RTV').innerText = g.whackMole?.rtv != null ? `±${g.whackMole.rtv} ms` : 'N/A';
-  document.getElementById('game2Omission').innerText = g.whackMole?.omissionErrors ?? 'N/A';
-  document.getElementById('game2Commission').innerText = g.whackMole?.commissionErrors ?? 'N/A';
-  document.getElementById('game2Recovery').innerText = g.whackMole?.recoveryTimeMs != null ? `${g.whackMole.recoveryTimeMs} ms` : 'N/A';
-  document.getElementById('game2Adapt').innerText = g.whackMole?.adaptabilityDrop != null ? `${g.whackMole.adaptabilityDrop}%` : 'N/A';
-  document.getElementById('game2P1MRT').innerText = g.whackMole?.phase1MRT != null ? `${g.whackMole.phase1MRT} ms` : 'N/A';
-  document.getElementById('game2P2MRT').innerText = g.whackMole?.phase2MRT != null ? `${g.whackMole.phase2MRT} ms` : 'N/A';
-  document.getElementById('game2P3MRT').innerText = g.whackMole?.phase3MRT != null ? `${g.whackMole.phase3MRT} ms` : 'N/A';
-  document.getElementById('game2GridExpand').innerText = g.whackMole?.reachedGridExpand != null ? (g.whackMole.reachedGridExpand ? 'Yes ✅' : 'No') : 'N/A';
-  document.getElementById('game3Nodes').innerText = g.gardenPath?.nodes || 'N/A';
-  document.getElementById('game3Time').innerText = g.gardenPath?.time || 'N/A';
-  document.getElementById('game5Acc').innerText = g.stroop?.acc || 'N/A';
-  document.getElementById('game5RT').innerText = g.stroop?.rt || 'N/A';
-  document.getElementById('game6Recall').innerText = g.delayedRecall?.correct ?? 'N/A';
-  document.getElementById('game6Distractors').innerText = g.delayedRecall?.distractors ?? 'N/A';
+const g = record.games || {};
+
+// Game 1
+document.getElementById('g1MaxSpan').innerText =
+    g.flowerMemory?.maxSpan ?? g.flowerMemory?.maxSeq ?? 'N/A';
+
+document.getElementById('g1AccuracyRate').innerText =
+    g.flowerMemory?.accuracyRate ?? 'N/A';
+
+document.getElementById('g1EncLatency').innerText =
+    g.flowerMemory?.encodingLatency ?? 'N/A';
+
+document.getElementById('g1SeqErrors').innerText =
+    g.flowerMemory?.sequenceErrors ?? 'N/A';
+
+document.getElementById('g1SpatialErrors').innerText =
+    g.flowerMemory?.spatialErrors ?? 'N/A';
+
+
+// Game 2
+document.getElementById('g2MeanRT').innerText =
+    g.whackMole?.mrt ? `${g.whackMole.mrt} ms` : 'N/A';
+
+document.getElementById('g2RTVariance').innerText =
+    g.whackMole?.rtv ? `±${g.whackMole.rtv} ms` : 'N/A';
+
+document.getElementById('g2OmissionErrors').innerText =
+    g.whackMole?.omissionErrors ?? 'N/A';
+
+document.getElementById('g2CommissionErrors').innerText =
+    g.whackMole?.commissionErrors ?? 'N/A';
+
+document.getElementById('g2Hits').innerText =
+    g.whackMole?.hits ?? 'N/A';
+
+document.getElementById('g2Targets').innerText =
+    g.whackMole?.targets ?? 'N/A';
+
+document.getElementById('g2HighestLevel').innerText =
+    g.whackMole?.highestLevel ?? 'N/A';
+
+
+// Game 3
+document.getElementById('g3PathTime').innerText =
+    g.gardenPath?.time ?? 'N/A';
+
+document.getElementById('g3SeqErrors').innerText =
+    g.gardenPath?.sequenceErrors ?? 'N/A';
+
+document.getElementById('g3CorrLatency').innerText =
+    g.gardenPath?.correctionLatency ?? 'N/A';
+
+document.getElementById('g3DwellTime').innerText =
+    g.gardenPath?.dwellTime ?? 'N/A';
+
+
+// Game 5
+document.getElementById('g5CongruentRT').innerText =
+    g.stroop?.congruentRT ?? 'N/A';
+
+document.getElementById('g5IncongruentRT').innerText =
+    g.stroop?.incongruentRT ?? 'N/A';
+
+document.getElementById('g5InterferenceCost').innerText =
+    g.stroop?.interferenceCost ?? 'N/A';
+
+document.getElementById('g5IncongruentAcc').innerText =
+    g.stroop?.acc ?? 'N/A';
+
+
+// Game 6
+document.getElementById('g6RetentionRate').innerText =
+    g.delayedRecall?.retentionRate ?? 'N/A';
+
+document.getElementById('g6IntrusionErrors').innerText =
+    g.delayedRecall?.intrusionErrors ?? 'N/A';
+
+document.getElementById('g6RetrievalLatency').innerText =
+    g.delayedRecall?.retrievalLatency ?? 'N/A';
+
+document.getElementById('g6CorrectCount').innerText =
+    g.delayedRecall?.correct ?? 'N/A';
+
+document.getElementById('g6TotalTargets').innerText =
+    g.delayedRecall?.totalTargets ?? 'N/A';
 
   const fd = record.feedback || {};
   document.getElementById('repFeedbackEnjoy').innerText = fd.enjoy || 'N/A';
