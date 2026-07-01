@@ -463,7 +463,7 @@ case 12:
   }
 }
 function goToFeedback() {
-    currentStep = 11;
+    currentStep = 12;
     updateAssessmentView();
 }
 // Mascot — always hidden (grandma disabled globally)
@@ -849,7 +849,7 @@ const finalReport = {
     return;
   }
 
-  currentStep = 11; 
+  currentStep = 12; 
   updateAssessmentView();
 }
 
