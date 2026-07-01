@@ -795,7 +795,7 @@ async function submitFeedback(event) {
   const tempData = JSON.parse(localStorage.getItem('tempAssessmentData') || '{}');
   const gameResults = JSON.parse(localStorage.getItem('tempGameResults') || '{}');
   
-  const finalReport = {
+const finalReport = {
     username: activeUser.username || 'anonymous',
     name: activeUser.name || 'Anonymous',
     age: activeUser.age || 'N/A',
@@ -805,7 +805,7 @@ async function submitFeedback(event) {
     tech: activeUser.tech || 'N/A',
     date: new Date().toLocaleDateString(),
     viewed: false,
-    preAssessment: tempData,
+    preassessment: tempData, // <-- Database requires this to be lowercase
     games: gameResults,
     feedback: { 
       enjoy: selectedEnjoy, 
