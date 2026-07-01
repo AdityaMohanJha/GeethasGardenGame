@@ -385,10 +385,13 @@ function goBack() {
 }
 
 function hideAllSteps() {
-  const ids = ['stepEmotion', 'stepOrientation', 'stepNaming', 'stepEncoding',
-    'stepSubtraction', 'stepSentence', 'stepFluency', 'stepSimilarities',
-    'screenSession1Complete',
-    'screenGameWrapper', 'screenFeedback', 'screenCongratulations'];
+ const ids = ['stepEmotion', 'stepOrientation', 'stepNaming', 'stepEncoding',
+  'stepSubtraction', 'stepSentence', 'stepFluency', 'stepSimilarities',
+  'screenSession1Complete',
+  'screenGameWrapper',
+  'screenGoogleForm',
+  'screenFeedback',
+  'screenCongratulations'];
   ids.forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('d-none'); });
 }
 
@@ -445,14 +448,24 @@ function updateAssessmentView() {
       document.getElementById('screenGameWrapper').classList.remove('d-none');
       if (typeof initGamesFlow === 'function') initGamesFlow();
       break;
-   case 10: document.getElementById('screenFeedback').classList.remove('d-none'); break;
-    case 11:
-      document.getElementById('screenCongratulations').classList.remove('d-none');
-      triggerCongratulations();
-      break;
+  case 10:
+  document.getElementById('screenGoogleForm').classList.remove('d-none');
+  break;
+
+case 11:
+  document.getElementById('screenFeedback').classList.remove('d-none');
+  break;
+
+case 12:
+  document.getElementById('screenCongratulations').classList.remove('d-none');
+  triggerCongratulations();
+  break;
   }
 }
-
+function goToFeedback() {
+    currentStep = 11;
+    showCurrentStep();
+}
 // Mascot — always hidden (grandma disabled globally)
 function showMascot() {
   const el = document.getElementById('mascotBox');
