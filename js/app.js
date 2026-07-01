@@ -95,7 +95,7 @@ window.GardenAudio = {
   }
 };
 
-// Global click listeners for cooldown and click pop feedback sounds
+// Global click listeners for cooldown and click pop  sounds
 document.addEventListener('click', (e) => {
   const btn = e.target.closest('.btn');
   if (btn && !btn.disabled && !btn.classList.contains('no-cooldown') && !btn.classList.contains('btn-cooldown-active')) {
@@ -149,7 +149,7 @@ function initDatabase() {
         delayedRecall: { correct: 4, distractors: 3 },
         clockDrawing: ''
       },
-      feedback: { enjoy: 'Loved them', easy: 'Very Easy', comments: '' }
+      : { enjoy: 'Loved them', easy: 'Very Easy', comments: '' }
     }];
     localStorage.setItem('patientAssessments', JSON.stringify(dummy));
   }
@@ -234,16 +234,23 @@ function toggleMode(e) {
   updateAuthFields();
 }
 
-function handleAuthSubmit(event) {
+async function handleAuthSubmit(event) {
   event.preventDefault();
   const nameInput = document.getElementById('regName')?.value.trim() || '';
   const usernameInput = document.getElementById('authUsername').value.trim();
   const passwordInput = document.getElementById('authPassword').value;
-  const usersDB = JSON.parse(localStorage.getItem('usersDB') || '[]');
 
   if (authMode === 'register') {
-    if (usersDB.some(u => u.username.toLowerCase() === usernameInput.toLowerCase() && u.role === activeRole)) {
-      alert('An account with that username already exists.'); return;
+    // Check if user exists in Supabase
+    const { data: existingUsers } = await supabaseClient
+      .from('app_users')
+      .select('*')
+      .eq('username', usernameInput)
+      .eq('role', activeRole);
+
+    if (existingUsers && existingUsers.length > 0) {
+      alert('An account with that username already exists.'); 
+      return;
     }
 
     if (activeRole === 'patient') {
@@ -274,33 +281,51 @@ function handleAuthSubmit(event) {
         gender: document.getElementById('regGender').value.trim(),
         contact: document.getElementById('regContact').value.trim()
       };
-      usersDB.push(newUser);
-      localStorage.setItem('usersDB', JSON.stringify(usersDB));
+      
+      // Insert Doctor into Supabase
+      await supabaseClient.from('app_users').insert([newUser]);
       localStorage.setItem('activeDoctor', JSON.stringify(newUser));
       window.location.href = 'doctor.html';
     }
   } else {
-    const user = usersDB.find(u => u.username.toLowerCase() === usernameInput.toLowerCase() && u.password === passwordInput && u.role === activeRole);
-    if (!user) { alert('Invalid username or password.'); return; }
-    if (activeRole === 'patient') { localStorage.setItem('activeUser', JSON.stringify(user)); window.location.href = 'patient.html'; }
-    else { localStorage.setItem('activeDoctor', JSON.stringify(user)); window.location.href = 'doctor.html'; }
+    // Login flow via Supabase
+    const { data: user, error } = await supabaseClient
+      .from('app_users')
+      .select('*')
+      .eq('username', usernameInput)
+      .eq('password', passwordInput)
+      .eq('role', activeRole)
+      .single();
+
+    if (error || !user) { 
+      alert('Invalid username or password.'); 
+      return; 
+    }
+    
+    if (activeRole === 'patient') { 
+      localStorage.setItem('activeUser', JSON.stringify(user)); 
+      window.location.href = 'patient.html'; 
+    } else { 
+      localStorage.setItem('activeDoctor', JSON.stringify(user)); 
+      window.location.href = 'doctor.html'; 
+    }
   }
 }
 
-function handleConsentSubmit(event) {
+async function handleConsentSubmit(event) {
   event.preventDefault();
   const c1 = document.getElementById('consent1').checked;
   const c2 = document.getElementById('consent2').checked;
   const c3 = document.getElementById('consent3').checked;
+  
   if (!c1 || !c2 || !c3) {
     alert('Please accept all consent items to proceed.');
     return;
   }
 
   if (window.tempRegData) {
-    const usersDB = JSON.parse(localStorage.getItem('usersDB') || '[]');
-    usersDB.push(window.tempRegData);
-    localStorage.setItem('usersDB', JSON.stringify(usersDB));
+    // Insert Patient into Supabase
+    await supabaseClient.from('app_users').insert([window.tempRegData]);
     localStorage.setItem('activeUser', JSON.stringify(window.tempRegData));
     delete window.tempRegData;
     window.location.href = 'patient.html';
@@ -320,7 +345,7 @@ let currentStep = 0;
 let currentAssessmentData = {
   feeling: '', timeOfDay: '', orientation: {}, naming: {},
   subtraction: [], sentenceRepetition: [], verbalFluency: {}, similarities: '',
-  games: {}, feedback: {}
+  games: {}, : {}
 };
 
 function startPreAssessment() {
@@ -351,7 +376,7 @@ function hideAllSteps() {
   const ids = ['stepEmotion', 'stepOrientation', 'stepNaming', 'stepEncoding',
     'stepSubtraction', 'stepSentence', 'stepFluency', 'stepSimilarities',
     'screenSession1Complete',
-    'screenGameWrapper', 'screenFeedback', 'screenCongratulations'];
+    'screenGameWrapper', 'screen', 'screenCongratulations'];
   ids.forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('d-none'); });
 }
 
@@ -360,7 +385,7 @@ function updateProgress(cur, total) {
   const txt = document.getElementById('progressText');
   if (!fill || !txt) return;
   fill.style.width = total > 0 ? `${(cur / total) * 100}%` : '100%';
-  txt.innerText = total > 0 ? `Step ${cur} of ${total}` : (cur === 10 ? 'Feedback' : 'Done!');
+  txt.innerText = total > 0 ? `Step ${cur} of ${total}` : (cur === 10 ? '' : 'Done!');
 }
 
 function updateAssessmentView() {
@@ -408,7 +433,7 @@ function updateAssessmentView() {
       document.getElementById('screenGameWrapper').classList.remove('d-none');
       if (typeof initGamesFlow === 'function') initGamesFlow();
       break;
-    case 10: document.getElementById('screenFeedback').classList.remove('d-none'); break;
+    case 10: document.getElementById('screen').classList.remove('d-none'); break;
     case 11:
       document.getElementById('screenCongratulations').classList.remove('d-none');
       triggerCongratulations();
@@ -749,23 +774,28 @@ function exitToDashboard() {
   if (confirm('Exit? Current step data will be discarded.')) window.location.href = 'index.html';
 }
 
-// ── Feedback & Congrats ───────────────────────────────────────
-let selectedFeedbackEnjoy = '', selectedFeedbackEasy = '';
+// ──  & Congrats ───────────────────────────────────────
+let selectedEnjoy = '', selectedEasy = '';
 
-function selectFeedbackOption(category, val, el) {
+function selectOption(category, val, el) {
   const id = category === 'enjoy' ? 'enjoyGrid' : 'difficultyGrid';
   document.getElementById(id).querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
-  if (category === 'enjoy') selectedFeedbackEnjoy = val;
-  else selectedFeedbackEasy = val;
+  if (category === 'enjoy') selectedEnjoy = val;
+  else selectedEasy = val;
 }
 
-function submitFeedback(event) {
+async function submitFeedback(event) {
   event.preventDefault();
-  if (!selectedFeedbackEnjoy || !selectedFeedbackEasy) { alert('Please answer both survey questions.'); return; }
+  if (!selectedFeedbackEnjoy || !selectedFeedbackEasy) { 
+    alert('Please answer both survey questions.'); 
+    return; 
+  }
+  
   const activeUser = JSON.parse(localStorage.getItem('activeUser') || '{}');
   const tempData = JSON.parse(localStorage.getItem('tempAssessmentData') || '{}');
   const gameResults = JSON.parse(localStorage.getItem('tempGameResults') || '{}');
+  
   const finalReport = {
     username: activeUser.username || 'anonymous',
     name: activeUser.name || 'Anonymous',
@@ -778,12 +808,24 @@ function submitFeedback(event) {
     viewed: false,
     preAssessment: tempData,
     games: gameResults,
-    feedback: { enjoy: selectedFeedbackEnjoy, easy: selectedFeedbackEasy, comments: document.getElementById('feedbackComments').value.trim() }
+    feedback: { 
+      enjoy: selectedFeedbackEnjoy, 
+      easy: selectedFeedbackEasy, 
+      comments: document.getElementById('feedbackComments').value.trim() 
+    }
   };
-  const list = JSON.parse(localStorage.getItem('patientAssessments') || '[]');
-  list.push(finalReport);
-  localStorage.setItem('patientAssessments', JSON.stringify(list));
-  currentStep = 11; updateAssessmentView();
+  
+  // Insert the final report into Supabase
+  const { error } = await supabaseClient.from('app_assessments').insert([finalReport]);
+  
+  if (error) {
+    console.error("Error saving assessment:", error);
+    alert("There was a problem saving your results. Please try again.");
+    return;
+  }
+
+  currentStep = 11; 
+  updateAssessmentView();
 }
 
 // ── Congratulations: trophies + falling flowers ───────────────
