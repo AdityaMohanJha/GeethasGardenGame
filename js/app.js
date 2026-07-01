@@ -1029,7 +1029,7 @@ function showPatientReport(index) {
   overlay.classList.add('active');
 
   document.getElementById('reportTitle').innerText = `Report: ${record.name}`;
-  document.getElementById('reportDateBadge').innerText = `Date: ${record.date}`;
+  document.getElementById('reportDateBadge').innerText = `Completed: ${formatDateTime(record.created_at)}`;
 
   // Demographics fields in report
   document.getElementById('repAge').innerText = record.age || 'N/A';
