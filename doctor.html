@@ -111,11 +111,19 @@
           <p><strong>Serial Subtraction:</strong></p>
           <p id="repSubList" style="margin-left:1.25rem;font-family:monospace;font-size:.95rem;margin-bottom:.9rem;">—
           </p>
-          <p><strong>Sentence Repetition:</strong></p>
-          <ul style="margin-left:1.25rem;margin-bottom:.9rem;">
-            <li>Round 1: <strong id="repSent1">N/A</strong></li>
-            <li>Round 2: <strong id="repSent2">N/A</strong></li>
-          </ul>
+         <p><strong>Sentence Repetition:</strong></p>
+<ul style="margin-left:1.25rem;margin-bottom:.9rem;list-style:none;padding-left:0;">
+  <li style="margin-bottom:.6rem;">
+    Round 1: <strong id="repSent1">N/A</strong><br>
+    <audio id="repSentAudio1" controls style="width:100%;max-width:280px;margin-top:.3rem;display:none;"></audio>
+    <span id="repSentAudio1Missing" style="font-size:.82rem;color:#999;font-style:italic;">No recording available</span>
+  </li>
+  <li style="margin-bottom:.6rem;">
+    Round 2: <strong id="repSent2">N/A</strong><br>
+    <audio id="repSentAudio2" controls style="width:100%;max-width:280px;margin-top:.3rem;display:none;"></audio>
+    <span id="repSentAudio2Missing" style="font-size:.82rem;color:#999;font-style:italic;">No recording available</span>
+  </li>
+</ul>
           <p><strong>Verbal Fluency:</strong> Letter <strong id="repFluencyLetter">N/A</strong></p>
           <div
             style="background:var(--color-blue-light);border:var(--border-main);padding:.5rem;max-height:80px;overflow-y:auto;margin-bottom:.9rem;"
