@@ -388,7 +388,7 @@ function hideAllSteps() {
   const ids = ['stepEmotion', 'stepOrientation', 'stepNaming', 'stepEncoding',
     'stepSubtraction', 'stepSentence', 'stepFluency', 'stepSimilarities',
     'screenSession1Complete',
-    'screenGameWrapper', 'screenFeedback', 'screenCongratulations'];
+    'screenGameWrapper', 'screenGoogleForm', 'screenFeedback', 'screenCongratulations'];
   ids.forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('d-none'); });
 }
 
@@ -441,12 +441,17 @@ function updateAssessmentView() {
     case 8.5:
       document.getElementById('screenSession1Complete').classList.remove('d-none');
       break;
-    case 9:
+   case 9:
       document.getElementById('screenGameWrapper').classList.remove('d-none');
       if (typeof initGamesFlow === 'function') initGamesFlow();
       break;
-   case 10: document.getElementById('screenFeedback').classList.remove('d-none'); break;
+    case 10:
+      document.getElementById('screenGoogleForm').classList.remove('d-none');
+      break;
     case 11:
+      document.getElementById('screenFeedback').classList.remove('d-none');
+      break;
+    case 12:
       document.getElementById('screenCongratulations').classList.remove('d-none');
       triggerCongratulations();
       break;
@@ -679,6 +684,11 @@ function submitStep8() {
   currentStep = 8.5; updateAssessmentView();
 }
 
+
+function goToFeedback() {
+  currentStep = 11;
+  updateAssessmentView();
+}
 // ── Session 1 Complete → Enter Garden ────────────────────────
 function startGardenJourney() {
   currentStep = 9; updateAssessmentView();
@@ -836,7 +846,7 @@ const finalReport = {
     return;
   }
 
-  currentStep = 11; 
+  currentStep = 12; 
   updateAssessmentView();
 }
 
@@ -882,7 +892,7 @@ async function loadDoctorDashboard() {
   const { data: assessments, error } = await supabaseClient
     .from('app_assessments')
     .select('*')
-    .order('date', { ascending: false });
+    .order('created_at', { ascending: false });
     
   if (error) {
     console.error("Error fetching patients:", error);
@@ -893,6 +903,15 @@ async function loadDoctorDashboard() {
   // Store globally so your view/filter functions still work smoothly
   window.currentPatientList = assessments || [];
   renderPatientsTable(window.currentPatientList);
+}
+
+function formatDateTime(isoString) {
+  if (!isoString) return 'N/A';
+  const d = new Date(isoString);
+  return d.toLocaleString(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short'
+  });
 }
 
 function renderPatientsTable(list) {
@@ -913,7 +932,7 @@ function renderPatientsTable(list) {
       <tr>
         <td><strong>${item.name}</strong>${viewedMark ? ` <span style="color:var(--color-green);font-size:.8rem;">${viewedMark}</span>` : ''}</td>
         <td><code>${item.username}</code></td>
-        <td>${item.date}</td>
+       <td>${formatDateTime(item.created_at)}</td>
         <td><span class="badge ${statusClass}">${statusLabel}</span></td>
         <td>
           <button class="btn btn-blue" onclick="showPatientReport(${idx})" style="padding:.35rem .75rem;font-size:.82rem;">View Report</button>
@@ -938,7 +957,7 @@ function showPatientReport(index) {
   overlay.classList.add('active');
 
   document.getElementById('reportTitle').innerText = `Report: ${record.name}`;
-  document.getElementById('reportDateBadge').innerText = `Date: ${record.date}`;
+  document.getElementById('reportDateBadge').innerText = `Completed: ${formatDateTime(record.created_at)}`;
 
   // Demographics fields in report
   document.getElementById('repAge').innerText = record.age || 'N/A';
