@@ -149,7 +149,7 @@ function initDatabase() {
         delayedRecall: { correct: 4, distractors: 3 },
         clockDrawing: ''
       },
-      : { enjoy: 'Loved them', easy: 'Very Easy', comments: '' }
+     feedback : { enjoy: 'Loved them', easy: 'Very Easy', comments: '' }
     }];
     localStorage.setItem('patientAssessments', JSON.stringify(dummy));
   }
@@ -345,9 +345,8 @@ let currentStep = 0;
 let currentAssessmentData = {
   feeling: '', timeOfDay: '', orientation: {}, naming: {},
   subtraction: [], sentenceRepetition: [], verbalFluency: {}, similarities: '',
-  games: {}, : {}
+  games: {}, feedback: {}
 };
-
 function startPreAssessment() {
   document.getElementById('screenWelcome').style.display = 'none';
   currentStep = 1;
