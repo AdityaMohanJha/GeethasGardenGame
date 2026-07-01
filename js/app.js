@@ -375,9 +375,7 @@ function hideAllSteps() {
   const ids = ['stepEmotion', 'stepOrientation', 'stepNaming', 'stepEncoding',
     'stepSubtraction', 'stepSentence', 'stepFluency', 'stepSimilarities',
     'screenSession1Complete',
-    'screenGameWrapper', 'screen', 'screenCongratulations'];
-  ids.forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('d-none'); });
-}
+    'screenGameWrapper', 'screenFeedback', 'screenCongratulations'];
 
 function updateProgress(cur, total) {
   const fill = document.getElementById('progressBarFill');
@@ -432,7 +430,7 @@ function updateAssessmentView() {
       document.getElementById('screenGameWrapper').classList.remove('d-none');
       if (typeof initGamesFlow === 'function') initGamesFlow();
       break;
-    case 10: document.getElementById('screen').classList.remove('d-none'); break;
+   case 10: document.getElementById('screenFeedback').classList.remove('d-none'); break;
     case 11:
       document.getElementById('screenCongratulations').classList.remove('d-none');
       triggerCongratulations();
