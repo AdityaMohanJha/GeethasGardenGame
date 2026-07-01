@@ -1165,6 +1165,13 @@ p {
   animation: pulseTarget 1s infinite alternate;
 }
 
+.trail-node.wrong-pulse {
+  animation: pulseWrong 0.3s 2 alternate;
+  border-color: var(--color-red) !important;
+  background-color: #fde8e8 !important;
+  color: var(--color-red) !important;
+}
+
 @keyframes pulseTarget {
   0% {
     transform: translate(-50%, -50%) scale(1)
@@ -1172,6 +1179,16 @@ p {
 
   100% {
     transform: translate(-50%, -50%) scale(1.08)
+  }
+}
+
+@keyframes pulseWrong {
+  0% {
+    transform: translate(-50%, -50%) scale(1)
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(1.15)
   }
 }
 
@@ -2313,4 +2330,33 @@ a {
 
 a:hover {
   color: var(--primary-dark);
+}
+
+/* ============================================================
+   Game 5: Stroop Feedback Border Flash and Shake
+   ============================================================ */
+.stroop-correct-border-flash {
+  animation: stroopGreenFlash 0.4s ease-out;
+}
+
+@keyframes stroopGreenFlash {
+  0% {
+    box-shadow: inset 0 0 0 0px #28a745;
+  }
+  30% {
+    box-shadow: inset 0 0 0 8px #28a745;
+  }
+  100% {
+    box-shadow: inset 0 0 0 0px #28a745;
+  }
+}
+
+.stroop-incorrect-shake {
+  animation: stroopRedShake 0.4s ease-out;
+}
+
+@keyframes stroopRedShake {
+  0%, 100% { transform: translateX(0); box-shadow: inset 0 0 0 0px #dc3545; }
+  20%, 60% { transform: translateX(-8px); box-shadow: inset 0 0 0 8px #dc3545; }
+  40%, 80% { transform: translateX(8px); box-shadow: inset 0 0 0 8px #dc3545; }
 }

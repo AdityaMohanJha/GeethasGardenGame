@@ -385,13 +385,10 @@ function goBack() {
 }
 
 function hideAllSteps() {
- const ids = ['stepEmotion', 'stepOrientation', 'stepNaming', 'stepEncoding',
-  'stepSubtraction', 'stepSentence', 'stepFluency', 'stepSimilarities',
-  'screenSession1Complete',
-  'screenGameWrapper',
-  'screenGoogleForm',
-  'screenFeedback',
-  'screenCongratulations'];
+  const ids = ['stepEmotion', 'stepOrientation', 'stepNaming', 'stepEncoding',
+    'stepSubtraction', 'stepSentence', 'stepFluency', 'stepSimilarities',
+    'screenSession1Complete',
+    'screenGameWrapper', 'screenFeedback', 'screenCongratulations'];
   ids.forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('d-none'); });
 }
 
@@ -421,8 +418,6 @@ function updateAssessmentView() {
     if (skipBtn) skipBtn.classList.add('d-none');
   }
 
- 
-
   switch (currentStep) {
     case 1: document.getElementById('stepEmotion').classList.remove('d-none'); break;
     case 2: document.getElementById('stepOrientation').classList.remove('d-none');
@@ -450,24 +445,14 @@ function updateAssessmentView() {
       document.getElementById('screenGameWrapper').classList.remove('d-none');
       if (typeof initGamesFlow === 'function') initGamesFlow();
       break;
-  case 10:
-  document.getElementById('screenGoogleForm').classList.remove('d-none');
-  break;
-
-case 11:
-  document.getElementById('screenFeedback').classList.remove('d-none');
-  break;
-
-case 12:
-  document.getElementById('screenCongratulations').classList.remove('d-none');
-  triggerCongratulations();
-  break;
+   case 10: document.getElementById('screenFeedback').classList.remove('d-none'); break;
+    case 11:
+      document.getElementById('screenCongratulations').classList.remove('d-none');
+      triggerCongratulations();
+      break;
   }
 }
-function goToFeedback() {
-    currentStep = 12;
-    updateAssessmentView();
-}
+
 // Mascot — always hidden (grandma disabled globally)
 function showMascot() {
   const el = document.getElementById('mascotBox');
@@ -598,85 +583,23 @@ const sentenceRounds = [
 ];
 let sentenceIndex = 0;
 
- let sentenceAudioUrls = [];
-
 function initSentenceRepetition() {
   sentenceIndex = 0;
-  sentenceAudioUrls = [];
   currentAssessmentData.sentenceRepetition = [];
   document.getElementById('sentenceScoringPanel').classList.add('d-none');
   document.getElementById('sentenceStartBtnContainer').classList.remove('d-none');
   document.getElementById('sentenceTextDisplay').classList.add('d-none');
 }
+
 function startSentenceRound() {
   document.getElementById('sentenceStartBtnContainer').classList.add('d-none');
   const display = document.getElementById('sentenceTextDisplay');
   display.innerText = `"${sentenceRounds[sentenceIndex]}"`;
   display.classList.remove('d-none');
-
-  setTimeout(async () => {
+  setTimeout(() => {
     display.classList.add('d-none');
-    await recordSentenceAudio();
     document.getElementById('sentenceScoringPanel').classList.remove('d-none');
   }, 5000);
-}
-
-function recordSentenceAudio() {
-  return new Promise(async (resolve) => {
-    const indicator = document.getElementById('sentenceRecordingIndicator');
-    const countdownEl = document.getElementById('sentenceRecordCountdown');
-    const roundIndex = sentenceIndex;
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      let chunks = [];
-      const recorder = new MediaRecorder(stream);
-      recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
-
-      recorder.onstop = async () => {
-        stream.getTracks().forEach(track => track.stop());
-        indicator.classList.add('d-none');
-        const blob = new Blob(chunks, { type: 'audio/webm' });
-        sentenceAudioUrls[roundIndex] = await uploadSentenceAudioBlob(blob, roundIndex);
-        resolve();
-      };
-
-      indicator.classList.remove('d-none');
-      let secondsLeft = 7;
-      countdownEl.innerText = secondsLeft;
-      const countdownInterval = setInterval(() => {
-        secondsLeft--;
-        countdownEl.innerText = Math.max(secondsLeft, 0);
-        if (secondsLeft <= 0) clearInterval(countdownInterval);
-      }, 1000);
-
-      recorder.start();
-      setTimeout(() => { if (recorder.state !== 'inactive') recorder.stop(); }, 7000);
-
-    } catch (err) {
-      console.error('Microphone unavailable:', err);
-      indicator.classList.add('d-none');
-      sentenceAudioUrls[roundIndex] = null;
-      resolve(); // don't block the assessment if mic access fails
-    }
-  });
-}
-
-async function uploadSentenceAudioBlob(blob, roundIndex) {
-  const activeUser = JSON.parse(localStorage.getItem('activeUser') || '{}');
-  const fileName = `${activeUser.username || 'anon'}_${Date.now()}_r${roundIndex + 1}.webm`;
-
-  const { error } = await supabaseClient.storage
-    .from('sentence-audio')
-    .upload(fileName, blob, { contentType: 'audio/webm' });
-
-  if (error) {
-    console.error('Audio upload failed:', error);
-    return null;
-  }
-
-  const { data } = supabaseClient.storage.from('sentence-audio').getPublicUrl(fileName);
-  return data.publicUrl;
 }
 
 function scoreSentence(isCorrect) {
@@ -685,13 +608,7 @@ function scoreSentence(isCorrect) {
   } else {
     if (window.GardenAudio) window.GardenAudio.playError();
   }
-
-  currentAssessmentData.sentenceRepetition.push({
-    sentence: sentenceRounds[sentenceIndex],
-    result: isCorrect ? 'Correct' : 'Incorrect',
-    audioUrl: sentenceAudioUrls[sentenceIndex] || null
-  });
-
+  currentAssessmentData.sentenceRepetition.push({ sentence: sentenceRounds[sentenceIndex], result: isCorrect ? 'Correct' : 'Incorrect' });
   document.getElementById('sentenceScoringPanel').classList.add('d-none');
   sentenceIndex++;
   if (sentenceIndex < 2) {
@@ -919,7 +836,7 @@ const finalReport = {
     return;
   }
 
-  currentStep = 12; 
+  currentStep = 11; 
   updateAssessmentView();
 }
 
@@ -960,20 +877,12 @@ async function loadDoctorDashboard() {
   const docObj = JSON.parse(activeDoc);
   // const badge = document.getElementById('doctorNameBadge');
   // if (badge) badge.innerText = docObj.name || docObj.username;
-
-  function formatDateTime(isoString) {
-  if (!isoString) return 'N/A';
-  const d = new Date(isoString);
-  return d.toLocaleString(undefined, {
-    dateStyle: 'medium',
-    timeStyle: 'short'
-  });
-}
+  
   // Fetch from Supabase
- const { data: assessments, error } = await supabaseClient
-  .from('app_assessments')
-  .select('*')
-  .order('created_at', { ascending: false });
+  const { data: assessments, error } = await supabaseClient
+    .from('app_assessments')
+    .select('*')
+    .order('date', { ascending: false });
     
   if (error) {
     console.error("Error fetching patients:", error);
@@ -994,23 +903,23 @@ function renderPatientsTable(list) {
     return;
   }
   tbody.innerHTML = list.map((item, idx) => {
-  let statusClass = 'badge-green', statusLabel = 'Completed';
-  if (item.preAssessment?.subtraction) {
-    const mistakes = item.preAssessment.subtraction.filter(s => !s.correct).length;
-    if (mistakes > 2) { statusClass = 'badge-orange'; statusLabel = 'Attention'; }
-  }
-  const viewedMark = item.viewed ? ' ✓' : '';
-  return `
-    <tr>
-      <td><strong>${item.name}</strong>${viewedMark ? ` <span style="color:var(--color-green);font-size:.8rem;">${viewedMark}</span>` : ''}</td>
-      <td><code>${item.username}</code></td>
-      <td>${formatDateTime(item.created_at)}</td>
-      <td><span class="badge ${statusClass}">${statusLabel}</span></td>
-      <td>
-        <button class="btn btn-blue" onclick="showPatientReport(${idx})" style="padding:.35rem .75rem;font-size:.82rem;">View Report</button>
-      </td>
-    </tr>`;
-}).join('');
+    let statusClass = 'badge-green', statusLabel = 'Completed';
+    if (item.preAssessment?.subtraction) {
+      const mistakes = item.preAssessment.subtraction.filter(s => !s.correct).length;
+      if (mistakes > 2) { statusClass = 'badge-orange'; statusLabel = 'Attention'; }
+    }
+    const viewedMark = item.viewed ? ' ✓' : '';
+    return `
+      <tr>
+        <td><strong>${item.name}</strong>${viewedMark ? ` <span style="color:var(--color-green);font-size:.8rem;">${viewedMark}</span>` : ''}</td>
+        <td><code>${item.username}</code></td>
+        <td>${item.date}</td>
+        <td><span class="badge ${statusClass}">${statusLabel}</span></td>
+        <td>
+          <button class="btn btn-blue" onclick="showPatientReport(${idx})" style="padding:.35rem .75rem;font-size:.82rem;">View Report</button>
+        </td>
+      </tr>`;
+  }).join('');
 }
 
 function filterPatientsList() {
@@ -1029,7 +938,7 @@ function showPatientReport(index) {
   overlay.classList.add('active');
 
   document.getElementById('reportTitle').innerText = `Report: ${record.name}`;
-  document.getElementById('reportDateBadge').innerText = `Completed: ${formatDateTime(record.created_at)}`;
+  document.getElementById('reportDateBadge').innerText = `Date: ${record.date}`;
 
   // Demographics fields in report
   document.getElementById('repAge').innerText = record.age || 'N/A';
@@ -1067,44 +976,37 @@ function showPatientReport(index) {
   document.getElementById('repSent1').innerText = sent[0]?.result || 'N/A';
   document.getElementById('repSent2').innerText = sent[1]?.result || 'N/A';
 
-  [1, 2].forEach(n => {
-  const round = sent[n - 1];
-  const audioEl = document.getElementById(`repSentAudio${n}`);
-  const missingEl = document.getElementById(`repSentAudio${n}Missing`);
-  if (round?.audioUrl) {
-    audioEl.src = round.audioUrl;
-    audioEl.style.display = 'block';
-    missingEl.style.display = 'none';
-  } else {
-    audioEl.src = '';
-    audioEl.style.display = 'none';
-    missingEl.style.display = 'inline';
-  }
-});
-
   const fl = pa.verbalFluency || {};
   document.getElementById('repFluencyLetter').innerText = fl.letter || 'N/A';
   document.getElementById('repFluencyWords').innerText = fl.words?.join(', ') || '—';
 
   document.getElementById('repSimilarityText').innerText = pa.similarities || 'N/A';
 
+// Game 1 — Flower Recall
 const g = record.games || {};
+const fm = g.flowerMemory || {};
 
-// Game 1
-document.getElementById('g1MaxSpan').innerText =
-    g.flowerMemory?.maxSpan ?? g.flowerMemory?.maxSeq ?? 'N/A';
+// 1. Forward Span Length
+document.getElementById('g1ForwardSpan').innerText =
+  fm.forwardSpan != null ? fm.forwardSpan : (fm.maxSeq != null ? fm.maxSeq : 'N/A');
 
-document.getElementById('g1AccuracyRate').innerText =
-    g.flowerMemory?.accuracyRate ?? 'N/A';
+// 2. Forward Number Correct (count + fraction + percentage)
+if (fm.correctTrials != null && fm.totalTrials != null) {
+  const pct = fm.correctPct != null ? fm.correctPct : (fm.totalTrials > 0 ? Math.round((fm.correctTrials / fm.totalTrials) * 100) : 0);
+  document.getElementById('g1ForwardCorrect').innerText = fm.correctTrials;
+  document.getElementById('g1ForwardCorrectDetail').innerText = ` / ${fm.totalTrials} sequences (${pct}%)`;
+} else {
+  document.getElementById('g1ForwardCorrect').innerText = 'N/A';
+  document.getElementById('g1ForwardCorrectDetail').innerText = '';
+}
 
-document.getElementById('g1EncLatency').innerText =
-    g.flowerMemory?.encodingLatency ?? 'N/A';
+// 3. First Tap Latency (avg)
+document.getElementById('g1FTL').innerText =
+  fm.ftlMs != null ? `${fm.ftlMs} ms` : 'N/A';
 
-document.getElementById('g1SeqErrors').innerText =
-    g.flowerMemory?.sequenceErrors ?? 'N/A';
-
-document.getElementById('g1SpatialErrors').innerText =
-    g.flowerMemory?.spatialErrors ?? 'N/A';
+// 4. Intertapping Interval (avg)
+document.getElementById('g1ITI').innerText =
+  fm.itiMs != null ? `${fm.itiMs} ms` : 'N/A';
 
 
 // Game 2
@@ -1131,31 +1033,53 @@ document.getElementById('g2HighestLevel').innerText =
 
 
 // Game 3
+document.getElementById('g3Sequence').innerText =
+    g.gardenPath?.sequence ?? 'N/A';
+
 document.getElementById('g3PathTime').innerText =
     g.gardenPath?.time ?? 'N/A';
 
 document.getElementById('g3SeqErrors').innerText =
     g.gardenPath?.sequenceErrors ?? 'N/A';
 
-document.getElementById('g3CorrLatency').innerText =
-    g.gardenPath?.correctionLatency ?? 'N/A';
+document.getElementById('g3Undos').innerText =
+    g.gardenPath?.undoCount ?? '0';
 
-document.getElementById('g3DwellTime').innerText =
-    g.gardenPath?.dwellTime ?? 'N/A';
+document.getElementById('g3MicroHesitations').innerText =
+    g.gardenPath?.avgHesitationMs ? `${g.gardenPath.avgHesitationMs} ms` : 'N/A';
 
+// Game 3 — Trail screenshot
+const trailImg = document.getElementById('trailDrawingImage');
+const noTrailMsg = document.getElementById('noTrailDrawingMsg');
+if (g.gardenPath?.screenshot?.startsWith('data:image')) {
+  trailImg.src = g.gardenPath.screenshot;
+  trailImg.style.display = 'inline-block';
+  noTrailMsg.style.display = 'none';
+} else {
+  trailImg.src = '';
+  trailImg.style.display = 'none';
+  noTrailMsg.style.display = 'flex';
+}
 
 // Game 5
-document.getElementById('g5CongruentRT').innerText =
-    g.stroop?.congruentRT ?? 'N/A';
+const stroop = g.stroop || {};
+document.getElementById('g5WAttempted').innerText = stroop.wAttempted ?? 'N/A';
+document.getElementById('g5WCorrect').innerText = stroop.wCorrect ?? 'N/A';
+document.getElementById('g5WAcc').innerText = stroop.wAcc != null ? `${stroop.wAcc}%` : 'N/A';
+document.getElementById('g5WSpeed').innerText = stroop.wSpeed != null ? `${stroop.wSpeed} items/s` : 'N/A';
 
-document.getElementById('g5IncongruentRT').innerText =
-    g.stroop?.incongruentRT ?? 'N/A';
+document.getElementById('g5CAttempted').innerText = stroop.cAttempted ?? 'N/A';
+document.getElementById('g5CCorrect').innerText = stroop.cCorrect ?? 'N/A';
+document.getElementById('g5CAcc').innerText = stroop.cAcc != null ? `${stroop.cAcc}%` : 'N/A';
+document.getElementById('g5CSpeed').innerText = stroop.cSpeed != null ? `${stroop.cSpeed} items/s` : 'N/A';
 
-document.getElementById('g5InterferenceCost').innerText =
-    g.stroop?.interferenceCost ?? 'N/A';
+document.getElementById('g5CWAttempted').innerText = stroop.cwAttempted ?? 'N/A';
+document.getElementById('g5CWCorrect').innerText = stroop.cwCorrect ?? 'N/A';
+document.getElementById('g5CWAcc').innerText = stroop.cwAcc != null ? `${stroop.cwAcc}%` : 'N/A';
+document.getElementById('g5CWSpeed').innerText = stroop.cwSpeed != null ? `${stroop.cwSpeed} items/s` : 'N/A';
 
-document.getElementById('g5IncongruentAcc').innerText =
-    g.stroop?.acc ?? 'N/A';
+document.getElementById('g5TI').innerText = stroop.timeInterference ?? 'N/A';
+document.getElementById('g5EI').innerText = stroop.errorInterference ?? 'N/A';
 
 
 // Game 6

@@ -64,7 +64,6 @@
       <h3 id="reportTitle">Assessment Record</h3>
       <div style="display:flex;gap:.75rem;align-items:center;">
         <span class="badge badge-pink" id="reportDateBadge">Date</span>
-        <span class="badge badge-pink" id="reportTimeBadge">Time</span>
         <button class="btn btn-orange" id="markViewedBtn" onclick="markCurrentViewed()">Mark Viewed ✓</button>
         <button class="btn btn-red" onclick="closeReport()">✕ Close</button>
       </div>
@@ -112,19 +111,11 @@
           <p><strong>Serial Subtraction:</strong></p>
           <p id="repSubList" style="margin-left:1.25rem;font-family:monospace;font-size:.95rem;margin-bottom:.9rem;">—
           </p>
-         <p><strong>Sentence Repetition:</strong></p>
-<ul style="margin-left:1.25rem;margin-bottom:.9rem;list-style:none;padding-left:0;">
-  <li style="margin-bottom:.6rem;">
-    Round 1: <strong id="repSent1">N/A</strong><br>
-    <audio id="repSentAudio1" controls style="width:100%;max-width:280px;margin-top:.3rem;display:none;"></audio>
-    <span id="repSentAudio1Missing" style="font-size:.82rem;color:#999;font-style:italic;">No recording available</span>
-  </li>
-  <li style="margin-bottom:.6rem;">
-    Round 2: <strong id="repSent2">N/A</strong><br>
-    <audio id="repSentAudio2" controls style="width:100%;max-width:280px;margin-top:.3rem;display:none;"></audio>
-    <span id="repSentAudio2Missing" style="font-size:.82rem;color:#999;font-style:italic;">No recording available</span>
-  </li>
-</ul>
+          <p><strong>Sentence Repetition:</strong></p>
+          <ul style="margin-left:1.25rem;margin-bottom:.9rem;">
+            <li>Round 1: <strong id="repSent1">N/A</strong></li>
+            <li>Round 2: <strong id="repSent2">N/A</strong></li>
+          </ul>
           <p><strong>Verbal Fluency:</strong> Letter <strong id="repFluencyLetter">N/A</strong></p>
           <div
             style="background:var(--color-blue-light);border:var(--border-main);padding:.5rem;max-height:80px;overflow-y:auto;margin-bottom:.9rem;"
@@ -141,14 +132,22 @@
 
           <!-- Game 1 -->
           <div class="info-box" style="margin-bottom:0;">
-            <div class="info-box-title">Game 1: Flower Memory 🌻
+            <div class="info-box-title">Game 1: Flower Recall 🌻
               <span style="font-weight:normal;font-size:.8rem;color:#555;">Visuospatial Working Memory</span>
             </div>
-            <p>Max Span: <strong id="g1MaxSpan">N/A</strong></p>
-            <p>Accuracy Rate: <strong id="g1AccuracyRate">N/A</strong></p>
-            <p>Encoding Latency (avg): <strong id="g1EncLatency">N/A</strong></p>
-            <p>Sequence Errors: <strong id="g1SeqErrors">N/A</strong></p>
-            <p>Spatial Errors: <strong id="g1SpatialErrors">N/A</strong></p>
+            <p title="Length of the longest sequence the participant successfully remembers and reproduces in the exact order presented.">
+              Forward Span Length: <strong id="g1ForwardSpan">N/A</strong>
+            </p>
+            <p title="Total count of sequences correctly reproduced. Shows correct / total and percentage.">
+              Forward Number Correct: <strong id="g1ForwardCorrect">N/A</strong>
+              <span id="g1ForwardCorrectDetail" style="font-size:.85rem;color:#555;"></span>
+            </p>
+            <p title="Time delay between end of visual sequence presentation and the participant's first tap (ms).">
+              First Tap Latency (avg): <strong id="g1FTL">N/A</strong>
+            </p>
+            <p title="Average time elapsed between each successive tap while reproducing the sequence (ms).">
+              Intertapping Interval (avg): <strong id="g1ITI">N/A</strong>
+            </p>
           </div>
 
           <!-- Game 2 -->
@@ -170,10 +169,11 @@
             <div class="info-box-title">Game 3: Garden Path 🔗
               <span style="font-weight:normal;font-size:.8rem;color:#555;">Cognitive Flexibility &amp; Visual Search</span>
             </div>
-            <p>Total Path Time: <strong id="g3PathTime">N/A</strong></p>
+            <p>Sequence: <strong id="g3Sequence" style="font-size:.85rem;">N/A</strong></p>
+            <p>Completion Time (Processing Speed): <strong id="g3PathTime">N/A</strong></p>
             <p>Sequence Errors: <strong id="g3SeqErrors">N/A</strong></p>
-            <p>Correction Latency (avg): <strong id="g3CorrLatency">N/A</strong></p>
-            <p>Dwell Time (avg): <strong id="g3DwellTime">N/A</strong></p>
+            <p>Count Undos: <strong id="g3Undos">N/A</strong></p>
+            <p>Micro-hesitations (avg time between clicks): <strong id="g3MicroHesitations">N/A</strong></p>
           </div>
 
           <!-- Game 4 -->
@@ -210,14 +210,50 @@
           </div>
 
           <!-- Game 5 -->
-          <div class="info-box" style="margin-bottom:0;">
+          <div class="info-box" style="margin-bottom:0; grid-column: 1 / -1;">
             <div class="info-box-title">Game 5: Colour Stroop 🎨
-              <span style="font-weight:normal;font-size:.8rem;color:#555;">Selective Attention &amp; Interference</span>
+              <span style="font-weight:normal;font-size:.8rem;color:#555;">Selective Attention &amp; Interference (Multi-Level Protocol)</span>
             </div>
-            <p>Congruent RT (avg): <strong id="g5CongruentRT">N/A</strong></p>
-            <p>Incongruent RT (avg): <strong id="g5IncongruentRT">N/A</strong></p>
-            <p style="color:#CB448D;">Interference Cost: <strong id="g5InterferenceCost">N/A</strong></p>
-            <p>Incongruent Accuracy: <strong id="g5IncongruentAcc">N/A</strong></p>
+            <div style="overflow-x:auto; margin-top:0.5rem;">
+              <table style="width:100%; border-collapse: collapse; font-size: 0.9rem; text-align: left;">
+                <thead>
+                  <tr style="border-bottom: 2px solid #ccc;">
+                    <th style="padding: 0.4rem;">Level / Task</th>
+                    <th style="padding: 0.4rem;">Attempted</th>
+                    <th style="padding: 0.4rem;">Correct</th>
+                    <th style="padding: 0.4rem;">Accuracy</th>
+                    <th style="padding: 0.4rem;">Processing Speed</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 0.4rem;">Level 1: Word Reading (W)</td>
+                    <td style="padding: 0.4rem;" id="g5WAttempted">0</td>
+                    <td style="padding: 0.4rem;" id="g5WCorrect">0</td>
+                    <td style="padding: 0.4rem;" id="g5WAcc">0%</td>
+                    <td style="padding: 0.4rem;" id="g5WSpeed">0.0 items/s</td>
+                  </tr>
+                  <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 0.4rem;">Level 2: Color Naming (C)</td>
+                    <td style="padding: 0.4rem;" id="g5CAttempted">0</td>
+                    <td style="padding: 0.4rem;" id="g5CCorrect">0</td>
+                    <td style="padding: 0.4rem;" id="g5CAcc">0%</td>
+                    <td style="padding: 0.4rem;" id="g5CSpeed">0.0 items/s</td>
+                  </tr>
+                  <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 0.4rem;">Level 3: Color-Word Interference (CW)</td>
+                    <td style="padding: 0.4rem;" id="g5CWAttempted">0</td>
+                    <td style="padding: 0.4rem;" id="g5CWCorrect">0</td>
+                    <td style="padding: 0.4rem;" id="g5CWAcc">0%</td>
+                    <td style="padding: 0.4rem;" id="g5CWSpeed">0.0 items/s</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div style="margin-top: 1rem; display: flex; gap: 2rem; border-top: 1px solid #eee; padding-top: 0.8rem; flex-wrap: wrap;">
+              <p style="margin:0;">Time Interference (TI): <strong id="g5TI">N/A</strong></p>
+              <p style="margin:0;">Error Interference (EI): <strong id="g5EI">N/A</strong></p>
+            </div>
           </div>
 
           <!-- Game 6 -->
@@ -239,6 +275,20 @@
             <p style="font-style:italic;" id="repFeedbackNotes">—</p>
           </div>
 
+        </div>
+      </div>
+
+      <!-- Box: Garden Path Screenshot (Game 3) -->
+      <div class="patient-stat-card" style="grid-column:1/-1;text-align:center;">
+        <h4>3. Garden Path Drawing (Game 3)</h4>
+        <div
+          style="display:inline-block;border:var(--border-main);padding:1rem;background:#fff;box-shadow:var(--shadow-main);">
+          <div id="noTrailDrawingMsg"
+            style="width:480px;max-width:100%;height:300px;display:flex;align-items:center;justify-content:center;background:#EEE;color:#555;">
+            No Trail Drawing Submitted
+          </div>
+          <img id="trailDrawingImage" style="display:none;max-width:480px;width:100%;height:auto;" src=""
+            alt="Patient Garden Path Trail">
         </div>
       </div>
 
