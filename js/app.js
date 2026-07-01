@@ -1061,6 +1061,21 @@ function showPatientReport(index) {
   document.getElementById('repSent1').innerText = sent[0]?.result || 'N/A';
   document.getElementById('repSent2').innerText = sent[1]?.result || 'N/A';
 
+  [1, 2].forEach(n => {
+  const round = sent[n - 1];
+  const audioEl = document.getElementById(`repSentAudio${n}`);
+  const missingEl = document.getElementById(`repSentAudio${n}Missing`);
+  if (round?.audioUrl) {
+    audioEl.src = round.audioUrl;
+    audioEl.style.display = 'block';
+    missingEl.style.display = 'none';
+  } else {
+    audioEl.src = '';
+    audioEl.style.display = 'none';
+    missingEl.style.display = 'inline';
+  }
+});
+
   const fl = pa.verbalFluency || {};
   document.getElementById('repFluencyLetter').innerText = fl.letter || 'N/A';
   document.getElementById('repFluencyWords').innerText = fl.words?.join(', ') || '—';
