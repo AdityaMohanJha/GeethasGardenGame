@@ -858,13 +858,29 @@ function restartScreening() {
 // ── Clinician Dashboard ───────────────────────────────────────
 let _currentReportIndex = -1;
 
-function loadDoctorDashboard() {
+async function loadDoctorDashboard() {
   const activeDoc = localStorage.getItem('activeDoctor');
   if (!activeDoc) { window.location.href = 'index.html'; return; }
+  
   const docObj = JSON.parse(activeDoc);
   const badge = document.getElementById('doctorNameBadge');
   if (badge) badge.innerText = docObj.name || docObj.username;
-  renderPatientsTable(JSON.parse(localStorage.getItem('patientAssessments') || '[]'));
+  
+  // Fetch from Supabase
+  const { data: assessments, error } = await supabaseClient
+    .from('app_assessments')
+    .select('*')
+    .order('date', { ascending: false });
+    
+  if (error) {
+    console.error("Error fetching patients:", error);
+    renderPatientsTable([]);
+    return;
+  }
+  
+  // Store globally so your view/filter functions still work smoothly
+  window.currentPatientList = assessments || [];
+  renderPatientsTable(window.currentPatientList);
 }
 
 function renderPatientsTable(list) {
