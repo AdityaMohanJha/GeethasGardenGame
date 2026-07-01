@@ -200,7 +200,7 @@ function updateAuthFields() {
     afg.classList.remove('d-none');
     afg.querySelector('input').setAttribute('required', 'true');
     gfg.classList.remove('d-none');
-    gfg.querySelector('input').setAttribute('required', 'true');
+    gfg.querySelector('select').setAttribute('required', 'true');
     cfg.classList.remove('d-none');
     cfg.querySelector('input').setAttribute('required', 'true');
 
