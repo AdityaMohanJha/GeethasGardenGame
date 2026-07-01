@@ -376,6 +376,8 @@ function hideAllSteps() {
     'stepSubtraction', 'stepSentence', 'stepFluency', 'stepSimilarities',
     'screenSession1Complete',
     'screenGameWrapper', 'screenFeedback', 'screenCongratulations'];
+  ids.forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('d-none'); });
+}
 
 function updateProgress(cur, total) {
   const fill = document.getElementById('progressBarFill');
