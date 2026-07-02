@@ -789,52 +789,41 @@ p {
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
-  width: min(620px, 92vw);
+  width: min(680px, 94vw);
+  min-height: 110px;
   display: flex;
-  gap: 1rem;
+  gap: 1.1rem;
   align-items: flex-start;
   background: var(--primary-dark);
   border: var(--border-main);
   border-color: var(--color-orange);
   box-shadow: var(--shadow-main);
-  padding: 1rem 1.25rem 1.5rem 1.25rem;
+  padding: 1.25rem 1.5rem 1.75rem 1.25rem;
   z-index: 300;
   cursor: pointer;
   animation: popIn 0.25s ease-out;
 }
 
 .mascot-avatar {
-  width: 60px;
-  height: 60px;
+  width: 76px;
+  height: 76px;
   flex-shrink: 0;
   border: 3px solid var(--color-orange);
   overflow: hidden;
   background-color: var(--color-white);
 }
 
-.mascot-avatar-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.mascot-text {
-  flex: 1;
-  color: #ffffff;
-}
-
 .mascot-name {
   color: var(--color-orange);
   font-weight: 800;
   font-family: var(--font-tenor);
-  margin-bottom: .3rem;
-  font-size: 1rem;
+  margin-bottom: .4rem;
+  font-size: 1.15rem;
 }
 
 .mascot-bubble {
-  font-size: .98rem;
-  line-height: 1.55;
+  font-size: 1.1rem;
+  line-height: 1.6;
   min-height: 1.4em;
   color: #eef1f8;
 }
@@ -2523,17 +2512,18 @@ a:hover {
   }
 }
 
-@media (max-width: 400px) {
+@media (max-width: 600px) {
   .flower-memory-grid { max-width: 260px; }
   .flower-btn { height: 62px; font-size: 1.9rem; }
   .options-grid { grid-template-columns: 1fr; }
 
    .mascot-dialogue {
     bottom: 12px;
-    padding: .8rem 1rem 1.2rem 1rem;
-    gap: .7rem;
+    padding: 1rem 1.1rem 1.4rem 1rem;
+    gap: .8rem;
+    min-height: 90px;
   }
-  .mascot-avatar { width: 46px; height: 46px; }
-  .mascot-name { font-size: .88rem; }
-  .mascot-bubble { font-size: .88rem; }
+  .mascot-avatar { width: 56px; height: 56px; }
+  .mascot-name { font-size: 1rem; }
+  .mascot-bubble { font-size: .98rem; }
 }
