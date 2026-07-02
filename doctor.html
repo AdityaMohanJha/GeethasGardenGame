@@ -103,22 +103,33 @@
         <h4>2. Cognitive Responses</h4>
         <div style="line-height:1.9;">
           <p><strong>Object Naming:</strong></p>
-          <ul style="margin-left:1.25rem;margin-bottom:.9rem;" id="repNamingList">
-            <li>🍎 <strong id="repNaming1">N/A</strong> <span id="repNamingExp1"></span></li>
-            <li>⏰ <strong id="repNaming2">N/A</strong> <span id="repNamingExp2"></span></li>
-            <li>🚲 <strong id="repNaming3">N/A</strong> <span id="repNamingExp3"></span></li>
-          </ul>
+<div style="display:flex;flex-direction:column;gap:.65rem;margin:0 0 .9rem 0;">
+  <div style="display:flex;align-items:center;gap:.6rem;">
+    <img id="repNamingImg1" src="" alt="" style="width:44px;height:44px;object-fit:cover;border:var(--border-main);display:none;flex-shrink:0;">
+    <span>Patient said: <strong id="repNaming1">N/A</strong> <span id="repNamingExp1"></span></span>
+  </div>
+  <div style="display:flex;align-items:center;gap:.6rem;">
+    <img id="repNamingImg2" src="" alt="" style="width:44px;height:44px;object-fit:cover;border:var(--border-main);display:none;flex-shrink:0;">
+    <span>Patient said: <strong id="repNaming2">N/A</strong> <span id="repNamingExp2"></span></span>
+  </div>
+  <div style="display:flex;align-items:center;gap:.6rem;">
+    <img id="repNamingImg3" src="" alt="" style="width:44px;height:44px;object-fit:cover;border:var(--border-main);display:none;flex-shrink:0;">
+    <span>Patient said: <strong id="repNaming3">N/A</strong> <span id="repNamingExp3"></span></span>
+  </div>
+</div>
           <p><strong>Serial Subtraction:</strong></p>
           <p id="repSubList" style="margin-left:1.25rem;font-family:monospace;font-size:.95rem;margin-bottom:.9rem;">—
           </p>
-         <p><strong>Sentence Repetition:</strong></p>
+    <p><strong>Sentence Repetition:</strong></p>
 <ul style="margin-left:1.25rem;margin-bottom:.9rem;list-style:none;padding-left:0;">
   <li style="margin-bottom:.6rem;">
+    <div style="font-style:italic;color:#555;margin-bottom:.25rem;" id="repSent1Text"></div>
     Round 1: <strong id="repSent1">N/A</strong><br>
     <audio id="repSentAudio1" controls style="width:100%;max-width:280px;margin-top:.3rem;display:none;"></audio>
     <span id="repSentAudio1Missing" style="font-size:.82rem;color:#999;font-style:italic;">No recording available</span>
   </li>
   <li style="margin-bottom:.6rem;">
+    <div style="font-style:italic;color:#555;margin-bottom:.25rem;" id="repSent2Text"></div>
     Round 2: <strong id="repSent2">N/A</strong><br>
     <audio id="repSentAudio2" controls style="width:100%;max-width:280px;margin-top:.3rem;display:none;"></audio>
     <span id="repSentAudio2Missing" style="font-size:.82rem;color:#999;font-style:italic;">No recording available</span>
@@ -129,7 +140,11 @@
             style="background:var(--color-blue-light);border:var(--border-main);padding:.5rem;max-height:80px;overflow-y:auto;margin-bottom:.9rem;"
             id="repFluencyWords">—</div>
           <p><strong>Abstract Similarity:</strong></p>
-          <p style="font-style:italic;margin-left:1.25rem;" id="repSimilarityText">N/A</p>
+<div style="display:flex;gap:.75rem;align-items:center;margin:.4rem 0 .5rem 1.25rem;">
+  <img src="images/apple.webp" alt="Apple" style="width:44px;height:44px;object-fit:cover;border:var(--border-main);">
+  <img src="images/mango.webp" alt="Mango" style="width:44px;height:44px;object-fit:cover;border:var(--border-main);">
+</div>
+<p style="font-style:italic;margin-left:1.25rem;" id="repSimilarityText">N/A</p>
         </div>
       </div>
 
