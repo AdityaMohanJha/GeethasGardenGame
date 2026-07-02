@@ -451,21 +451,56 @@ function updateAssessmentView() {
     case 11:
       document.getElementById('screenFeedback').classList.remove('d-none');
       break;
-    case 12:
+   case 12:
       document.getElementById('screenCongratulations').classList.remove('d-none');
       triggerCongratulations();
       break;
   }
+
+  if (currentStep >= 1 && currentStep <= 9) {
+    showGeethaDialogue(currentStep);
+  } else {
+    hideMascot();
+  }
 }
 
 // Mascot — always hidden (grandma disabled globally)
-function showMascot() {
-  const el = document.getElementById('mascotBox');
-  if (el) el.classList.remove('d-none');
+let _geethaTypeInterval = null;
+
+const GEETHA_LINES = {
+  1: "How are you feeling today? Pick what fits, then tell me the time of day.",
+  2: "Let's get grounded — tell me today's date and where you are right now.",
+  3: "Take a look at these pictures and tell me what they are.",
+  4: "Study these five carefully — I'll ask about them again soon!",
+  5: "Let's do some quick subtraction together.",
+  6: "Listen closely, then repeat the sentence back to me.",
+  7: "Quick as you can — name words starting with the letter shown!",
+  8: "Tell me how these two are alike.",
+  9: "Time to play! Six little games are waiting in the garden."
+};
+
+function showGeethaDialogue(step) {
+  const line = GEETHA_LINES[step];
+  const box = document.getElementById('mascotBox');
+  const textEl = document.getElementById('mascotDialogueText');
+  if (!line || !box || !textEl) { hideMascot(); return; }
+
+  if (_geethaTypeInterval) clearInterval(_geethaTypeInterval);
+  textEl.innerText = '';
+  box.classList.remove('d-none');
+
+  let i = 0;
+  _geethaTypeInterval = setInterval(() => {
+    textEl.innerText += line[i];
+    i++;
+    if (i >= line.length) clearInterval(_geethaTypeInterval);
+  }, 35); // typing speed — ms per character
 }
+
 function hideMascot() {
   const el = document.getElementById('mascotBox');
   if (el) el.classList.add('d-none');
+  if (_geethaTypeInterval) clearInterval(_geethaTypeInterval);
 }
 
 // ── Step 1: Emotion & Time ────────────────────────────────────
@@ -1064,35 +1099,31 @@ const namingImgs = n.images || [];
   }
 });
 
-  const sent = pa.sentenceRepetition || [];
-document.getElementById('repSent1').innerText = sent[0]?.result || 'N/A';
-document.getElementById('repSent2').innerText = sent[1]?.result || 'N/A';
-document.getElementById('repSent1Text').innerText = sent[0]?.sentence ? `"${sent[0].sentence}"` : '';
-document.getElementById('repSent2Text').innerText = sent[1]?.sentence ? `"${sent[1].sentence}"` : '';
+ const sent = pa.sentenceRepetition || [];
+  document.getElementById('repSent1').innerText = sent[0]?.result || 'N/A';
+  document.getElementById('repSent2').innerText = sent[1]?.result || 'N/A';
+  document.getElementById('repSent1Text').innerText = sent[0]?.sentence ? `"${sent[0].sentence}"` : '';
+  document.getElementById('repSent2Text').innerText = sent[1]?.sentence ? `"${sent[1].sentence}"` : '';
 
   const sub = pa.subtraction || [];
   document.getElementById('repSubList').innerHTML = sub.length
     ? sub.map(s => `${s.question} = ${s.answer} ${s.correct ? '<span style="color:green;">✓</span>' : '<span style="color:var(--color-red);">✗</span>'}`).join('<br>')
     : '—';
 
-  const sent = pa.sentenceRepetition || [];
-  document.getElementById('repSent1').innerText = sent[0]?.result || 'N/A';
-  document.getElementById('repSent2').innerText = sent[1]?.result || 'N/A';
-
   [1, 2].forEach(n => {
-  const round = sent[n - 1];
-  const audioEl = document.getElementById(`repSentAudio${n}`);
-  const missingEl = document.getElementById(`repSentAudio${n}Missing`);
-  if (round?.audioUrl) {
-    audioEl.src = round.audioUrl;
-    audioEl.style.display = 'block';
-    missingEl.style.display = 'none';
-  } else {
-    audioEl.src = '';
-    audioEl.style.display = 'none';
-    missingEl.style.display = 'inline';
-  }
-});
+    const round = sent[n - 1];
+    const audioEl = document.getElementById(`repSentAudio${n}`);
+    const missingEl = document.getElementById(`repSentAudio${n}Missing`);
+    if (round?.audioUrl) {
+      audioEl.src = round.audioUrl;
+      audioEl.style.display = 'block';
+      missingEl.style.display = 'none';
+    } else {
+      audioEl.src = '';
+      audioEl.style.display = 'none';
+      missingEl.style.display = 'inline';
+    }
+  });
 
   const fl = pa.verbalFluency || {};
   document.getElementById('repFluencyLetter').innerText = fl.letter || 'N/A';
