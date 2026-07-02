@@ -486,12 +486,14 @@ function showGeethaDialogue(step) {
   if (!line || !box || !textEl) { hideMascot(); return; }
 
   if (_geethaTypeInterval) clearInterval(_geethaTypeInterval);
-  textEl.innerText = '';
+  let typed = '';
+  textEl.textContent = '';
   box.classList.remove('d-none');
 
   let i = 0;
   _geethaTypeInterval = setInterval(() => {
-    textEl.innerText += line[i];
+    typed += line[i];
+    textEl.textContent = typed;
     i++;
     if (i >= line.length) clearInterval(_geethaTypeInterval);
   }, 35); // typing speed — ms per character
