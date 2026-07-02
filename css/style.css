@@ -782,48 +782,76 @@ p {
 }
 
 /* ============================================================
-   Mascot
+   Geetha Dialogue Box
    ============================================================ */
 .mascot-dialogue {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(620px, 92vw);
   display: flex;
-  gap: 1.25rem;
+  gap: 1rem;
   align-items: flex-start;
-  background-color: var(--color-orange-light);
+  background: var(--primary-dark);
   border: var(--border-main);
+  border-color: var(--color-orange);
   box-shadow: var(--shadow-main);
-  padding: 1.1rem;
-  margin-bottom: 1.25rem;
+  padding: 1rem 1.25rem 1.5rem 1.25rem;
+  z-index: 300;
+  cursor: pointer;
+  animation: popIn 0.25s ease-out;
 }
 
 .mascot-avatar {
-  font-size: 3rem;
-  user-select: none;
-  background-color: var(--color-card);
-  border: var(--border-main);
-  padding: .35rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: var(--shadow-hover);
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0;
+  border: 3px solid var(--color-orange);
+  overflow: hidden;
+  background-color: var(--color-white);
+}
+
+.mascot-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .mascot-text {
-  flex: 1
+  flex: 1;
+  color: #ffffff;
 }
 
 .mascot-name {
-  font-family: var(--font-sans);
-  font-weight: 700;
-  font-size: .95rem;
-  color: var(--color-pink);
-  margin-bottom: .15rem
+  color: var(--color-orange);
+  font-weight: 800;
+  font-family: var(--font-tenor);
+  margin-bottom: .3rem;
+  font-size: 1rem;
 }
 
 .mascot-bubble {
-  font-size: 1rem;
-  font-family: var(--font-sans);
-  line-height: 1.5;
-  color: var(--primary-dark)
+  font-size: .98rem;
+  line-height: 1.55;
+  min-height: 1.4em;
+  color: #eef1f8;
+}
+
+.mascot-arrow {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--color-orange);
+  font-size: .9rem;
+  animation: bounceArrow 1s infinite;
+}
+
+@keyframes bounceArrow {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(4px); }
 }
 
 /* ============================================================
@@ -2499,4 +2527,13 @@ a:hover {
   .flower-memory-grid { max-width: 260px; }
   .flower-btn { height: 62px; font-size: 1.9rem; }
   .options-grid { grid-template-columns: 1fr; }
+
+   .mascot-dialogue {
+    bottom: 12px;
+    padding: .8rem 1rem 1.2rem 1rem;
+    gap: .7rem;
+  }
+  .mascot-avatar { width: 46px; height: 46px; }
+  .mascot-name { font-size: .88rem; }
+  .mascot-bubble { font-size: .88rem; }
 }
