@@ -525,11 +525,11 @@ function submitStep3() {
   if (!obj1 || !obj2 || !obj3) { alert('Please name all three objects.'); return; }
   currentAssessmentData.naming = {
     obj1, obj2, obj3,
-    expected: _namingSelected ? _namingSelected.map(i => i.label) : []
+    expected: _namingSelected ? _namingSelected.map(i => i.label) : [],
+    images: _namingSelected ? _namingSelected.map(i => i.src) : []   // ← new
   };
   currentStep = 4; updateAssessmentView();
 }
-
 // ── Step 4: Memory Encoding ───────────────────────────────────
 function submitStep4() { currentStep = 5; updateAssessmentView(); }
 
