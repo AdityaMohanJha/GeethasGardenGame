@@ -2360,3 +2360,143 @@ a:hover {
   20%, 60% { transform: translateX(-8px); box-shadow: inset 0 0 0 8px #dc3545; }
   40%, 80% { transform: translateX(8px); box-shadow: inset 0 0 0 8px #dc3545; }
 }
+
+
+
+/* ============================================================
+   Mobile Responsiveness (≤600px)
+   ============================================================ */
+@media (max-width: 600px) {
+
+  /* Navbar */
+  .navbar {
+    padding: 0 0.75rem;
+  }
+  .logo-text { font-size: 0.95rem; }
+  .nav-progress-wrapper { max-width: 46vw; }
+  .nav-actions { gap: 0.3rem; }
+  .nav-actions .btn { padding: 0.45rem 0.7rem; font-size: 0.78rem; }
+  .btn-icon { width: 30px; height: 30px; font-size: 0.85rem; }
+
+  /* General buttons */
+  .btn {
+    font-size: 0.82rem;
+    padding: 0.55rem 0.9rem;
+  }
+
+  /* Layout containers */
+  .fullscreen-container {
+    padding: calc(var(--navbar-h) + 1rem) 0.9rem 1.25rem 0.9rem;
+  }
+  .step-centered { padding-top: 1.5rem; }
+
+  /* Option / naming / encoding grids */
+  .options-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+  }
+  .naming-grid-row {
+    flex-wrap: wrap;
+  }
+  .naming-grid-row .naming-card {
+    flex-basis: 100%;
+  }
+  .encoding-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Game 1 — Flower grid */
+  .flower-memory-grid {
+    max-width: 320px;
+    gap: 0.7rem;
+  }
+  .flower-btn {
+    height: 72px;
+    font-size: 2.2rem;
+  }
+
+  /* Game 2 — Whack-a-mole */
+  .mole-landscape,
+  .garden-mole-scene {
+    width: 100%;
+    max-width: 100%;
+    min-height: 380px;
+    height: 55vh;
+  }
+
+  /* Game 3 — Garden Path trail */
+  .trail-canvas-container {
+    max-width: 100%;
+    height: 380px;
+  }
+  .trail-node {
+    width: 38px;
+    height: 38px;
+    font-size: 0.92rem;
+  }
+
+  /* Game 4 — Clock drawing */
+  .drawing-canvas {
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+  }
+
+  /* Game 5 — Stroop */
+  .stroop-word-display { margin-bottom: 1.25rem; }
+  .stroop-buttons {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.8rem;
+    max-width: 100%;
+  }
+
+  /* Game 6 — Recall */
+  .recall-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+  }
+
+  /* Doctor dashboard */
+  .stats-table th,
+  .stats-table td {
+    padding: 0.6rem 0.7rem;
+    font-size: 0.85rem;
+  }
+  .patient-details-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .report-overlay { padding: 0.9rem; }
+  .report-close-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+  }
+  .report-close-bar > div {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  /* Google Form iframe */
+  #screenGoogleForm iframe {
+    height: 70vh !important;
+  }
+
+  /* Congrats screen */
+  .congrats-banner { height: 26vh; min-height: 140px; }
+  .congrats-medal svg { width: 170px; height: 200px; }
+  .congrats-medal { margin-top: -100px; }
+
+  /* Login screen */
+  .login-tagline { font-size: 1.9rem; }
+  #loginCard {
+    padding: 2rem 1.5rem !important;
+    min-height: auto;
+  }
+}
+
+@media (max-width: 400px) {
+  .flower-memory-grid { max-width: 260px; }
+  .flower-btn { height: 62px; font-size: 1.9rem; }
+  .options-grid { grid-template-columns: 1fr; }
+}
