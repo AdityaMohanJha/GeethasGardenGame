@@ -1043,14 +1043,32 @@ function showPatientReport(index) {
   document.getElementById('repLocation').innerText = o.location || 'N/A';
   document.getElementById('repCity').innerText = o.city || 'N/A';
 
-  const n = pa.naming || {};
-  document.getElementById('repNaming1').innerText = n.obj1 || 'Unanswered';
-  document.getElementById('repNaming2').innerText = n.obj2 || 'Unanswered';
-  document.getElementById('repNaming3').innerText = n.obj3 || 'Unanswered';
-  const expected = n.expected || ['Apple', 'Clock', 'Bicycle'];
-  document.getElementById('repNamingExp1').innerText = `(${expected[0] || '?'})`;
-  document.getElementById('repNamingExp2').innerText = `(${expected[1] || '?'})`;
-  document.getElementById('repNamingExp3').innerText = `(${expected[2] || '?'})`;
+const n = pa.naming || {};
+document.getElementById('repNaming1').innerText = n.obj1 || 'Unanswered';
+document.getElementById('repNaming2').innerText = n.obj2 || 'Unanswered';
+document.getElementById('repNaming3').innerText = n.obj3 || 'Unanswered';
+const expected = n.expected || ['Apple', 'Clock', 'Bicycle'];
+document.getElementById('repNamingExp1').innerText = `(${expected[0] || '?'})`;
+document.getElementById('repNamingExp2').innerText = `(${expected[1] || '?'})`;
+document.getElementById('repNamingExp3').innerText = `(${expected[2] || '?'})`;
+
+const namingImgs = n.images || [];
+[1, 2, 3].forEach((num, idx) => {
+  const imgEl = document.getElementById(`repNamingImg${num}`);
+  if (!imgEl) return;
+  if (namingImgs[idx]) {
+    imgEl.src = namingImgs[idx];
+    imgEl.style.display = 'inline-block';
+  } else {
+    imgEl.style.display = 'none';
+  }
+});
+
+  const sent = pa.sentenceRepetition || [];
+document.getElementById('repSent1').innerText = sent[0]?.result || 'N/A';
+document.getElementById('repSent2').innerText = sent[1]?.result || 'N/A';
+document.getElementById('repSent1Text').innerText = sent[0]?.sentence ? `"${sent[0].sentence}"` : '';
+document.getElementById('repSent2Text').innerText = sent[1]?.sentence ? `"${sent[1].sentence}"` : '';
 
   const sub = pa.subtraction || [];
   document.getElementById('repSubList').innerHTML = sub.length
