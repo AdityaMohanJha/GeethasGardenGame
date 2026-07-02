@@ -803,7 +803,12 @@ p {
   cursor: pointer;
   animation: popIn 0.25s ease-out;
 }
-
+.mascot-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
 .mascot-avatar {
   width: 76px;
   height: 76px;
